@@ -1,4 +1,4 @@
-#summary ecuExplorer Source Code v3.0.28
+#summary ecuExplorer Source Code (v3.0.28)
 
 = Introduction =
 
