@@ -1,0 +1,3387 @@
+long ecuExplorer::LoadDataItemMap()
+{
+	CString sError;
+	HKEY hReg_parent = NULL;
+	HKEY hReg_byte = NULL;
+	HKEY hReg_bit = NULL;
+	long lResult;
+	int iLoop_byte = 0;
+	int iLoop_bit = 0;
+	char* lpszName_byte = NULL;
+	char* lpszName_bit = NULL;
+	DWORD dwSize = 255;
+	int iByteIndex = 0;
+	int iBitIndex = 0;
+	LPSTRUCT_BYTEMASK lpByteMask = NULL;
+	LPSTRUCT_BITMASK lpBitMask = NULL;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if((lResult = RegOpenKeyEx(HKEY_CURRENT_USER,"Software\\TARI Racing Software\\ecuExplorer\\DataItemMap",NULL,KEY_ALL_ACCESS,&hReg_parent)) != ERROR_SUCCESS)
+	{
+		sError.Format("RegOpenKey Failed With %i : %i [0x%X]",lResult,GetLastError(),GetLastError());
+		OutputString(sError,MESSAGETYPE_ERROR);
+	}
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if(lResult == 2)
+	{
+		WriteDefaultDataItemMap_byte1_byte10();
+		WriteDefaultDataItemMap_byte11_byte20();
+		WriteDefaultDataItemMap_byte21_byte30();
+		WriteDefaultDataItemMap_byte31_byte40();
+		WriteDefaultDataItemMap_byte41_byte50();
+
+		if((lResult = RegOpenKeyEx(HKEY_CURRENT_USER,"Software\\TARI Racing Software\\ecuExplorer\\DataItemMap",NULL,KEY_ALL_ACCESS,&hReg_parent)) != ERROR_SUCCESS)
+		{
+			sError.Format("RegOpenKey Failed With %i : %i [0x%X]",lResult,GetLastError(),GetLastError());
+			OutputString(sError,MESSAGETYPE_ERROR);
+			return lResult;
+		}
+	}
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if((lpszName_byte = (char*)malloc(dwSize)) == NULL)
+	{
+		sError.Format("Memory Error - LoadDataItemMap [lpszName_byte] : %i [0x%X]",GetLastError(),GetLastError());
+		OutputString(sError,MESSAGETYPE_ERROR);
+		return F_NO_MEMORY;
+	}
+	memset(lpszName_byte,0,dwSize);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if((lpszName_bit = (char*)malloc(dwSize)) == NULL)
+	{
+		sError.Format("Memory Error - LoadDataItemMap [lpszName_bit] : %i [0x%X]",GetLastError(),GetLastError());
+		OutputString(sError,MESSAGETYPE_ERROR);
+		return F_NO_MEMORY;
+	}
+	memset(lpszName_bit,0,dwSize);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	while((lResult = RegEnumKeyEx(hReg_parent,iLoop_byte++,lpszName_byte,&dwSize,NULL,NULL,NULL,NULL)) != ERROR_NO_MORE_ITEMS)
+	{
+		if((lResult = RegOpenKeyEx(hReg_parent,lpszName_byte,NULL,KEY_ALL_ACCESS,&hReg_byte)) == ERROR_SUCCESS)
+		{
+			iLoop_bit = 0;
+			sError.Format("DataItemMap\\%s",lpszName_byte);
+
+			if((lpByteMask = new STRUCT_BYTEMASK) == NULL)
+			{
+				sError.Format("Memory Error - LoadDataItemMap [lpByteMask] : %i [0x%X]",GetLastError(),GetLastError());
+				OutputString(sError,MESSAGETYPE_ERROR);
+				return F_NO_MEMORY;
+			}
+
+			if((lpByteMask->iByte = GetProfileInt(sError,"ByteIndex",0)) > 0)
+			{
+				while((lResult = RegEnumKeyEx(hReg_byte,iLoop_bit++,lpszName_bit,&dwSize,NULL,NULL,NULL,NULL)) != ERROR_NO_MORE_ITEMS)
+				{
+					if((lResult = RegOpenKeyEx(hReg_byte,lpszName_bit,NULL,KEY_ALL_ACCESS,&hReg_bit)) == ERROR_SUCCESS)
+					{
+						sError.Format("DataItemMap\\%s\\%s",lpszName_byte,lpszName_bit);
+
+						if((lpBitMask = new STRUCT_BITMASK) == NULL)
+						{
+							sError.Format("Memory Error - LoadDataItemMap [lpBitMask] : %i [0x%X]",GetLastError(),GetLastError());
+							OutputString(sError,MESSAGETYPE_ERROR);
+							return F_NO_MEMORY;
+						}
+
+						lpBitMask->cMask = GetProfileInt(sError,"BitMask",0);
+						lpBitMask->szName = GetProfileString(sError,"Name",NULL);
+						lpBitMask->ulAddress_high = GetProfileInt(sError,"AddressHigh",0);
+						lpBitMask->ulAddress_low = GetProfileInt(sError,"AddressLow",0);
+						lpBitMask->cType = GetProfileInt(sError,"Type",0);
+						lpBitMask->usOperand_addition = GetProfileInt(sError,"Addition",0);
+						lpBitMask->usOperand_subtract = GetProfileInt(sError,"Subtract",0);
+						lpBitMask->usOperand_multiplier = GetProfileInt(sError,"Multiplier",0);
+						lpBitMask->usOperand_divisor = GetProfileInt(sError,"Divisor",0);
+						lpBitMask->usDecimals = GetProfileInt(sError,"Decimals",0);
+						lpBitMask->szUnit = GetProfileString(sError,"Unit",NULL);
+
+						lpByteMask->listBitMask.AddTail(lpBitMask);
+
+						RegCloseKey(hReg_bit);
+					}
+					dwSize = 255;
+				}
+				mapDataItemMap.SetAt(lpByteMask->iByte,lpByteMask);
+			}
+			else
+				delete lpByteMask;
+
+			RegCloseKey(hReg_byte);
+		}
+		dwSize = 255;
+	}
+
+EXCEPTION_BOOKMARK(__LINE__)
+	RegCloseKey(hReg_parent);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	free(lpszName_byte);
+	free(lpszName_bit);
+
+CATCHCATCH("ecuExplorer::LoadDataItemMap()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+long ecuExplorer::WriteDefaultDataItemMap_byte1_byte10()
+{
+	CString sError;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1","ByteIndex",1);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte1\\bit1","Name","Engine Speed");
+	WriteProfileInt("DataItemMap\\byte1\\bit1","AddressHigh",0xE);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","AddressLow",0xF);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","Divisor",4);
+	WriteProfileInt("DataItemMap\\byte1\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte1\\bit1","Unit","RPM");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte1\\bit2","Name","Manifold Absolute Pressure");
+	WriteProfileInt("DataItemMap\\byte1\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","AddressLow",0xD);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","Type",TYPE_PRESSURE);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","Multiplier",37);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte1\\bit2","Decimals",3);
+	WriteProfileString("DataItemMap\\byte1\\bit2","Unit","PSI");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte1\\bit3","Name","Air/Fuel Learning #2");
+	WriteProfileInt("DataItemMap\\byte1\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","AddressLow",0xC);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit3","Decimals",2);
+	WriteProfileString("DataItemMap\\byte1\\bit3","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte1\\bit4","Name","Air/Fuel Correction #2");
+	WriteProfileInt("DataItemMap\\byte1\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","AddressLow",0xB);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit4","Decimals",2);
+	WriteProfileString("DataItemMap\\byte1\\bit4","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte1\\bit5","Name","Air/Fuel Learning #1");
+	WriteProfileInt("DataItemMap\\byte1\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","AddressLow",0xA);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit5","Decimals",2);
+	WriteProfileString("DataItemMap\\byte1\\bit1","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte1\\bit6","Name","Air/Fuel Correction #1");
+	WriteProfileInt("DataItemMap\\byte1\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","AddressLow",0x9);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte1\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte1\\bit1","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte1\\bit7","Name","Coolant Temperature");
+	WriteProfileInt("DataItemMap\\byte1\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","AddressLow",0x8);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","Type",TYPE_TEMPERATURE);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","Subtract",40);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit7","Decimals",2);
+	WriteProfileString("DataItemMap\\byte1\\bit1","Unit","°C");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte1\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte1\\bit8","Name","Engine Load");
+	WriteProfileInt("DataItemMap\\byte1\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","AddressLow",0x7);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte1\\bit8","Decimals",2);
+	WriteProfileString("DataItemMap\\byte1\\bit1","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2","ByteIndex",2);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte2\\bit1","Name","Front O2 Sensor #2");
+	WriteProfileInt("DataItemMap\\byte2\\bit1","AddressHigh",0x1A);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","AddressLow",0x1B);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","Multiplier",5);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte2\\bit1","Decimals",3);
+	WriteProfileString("DataItemMap\\byte2\\bit1","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte2\\bit2","Name","Rear O2 Sensor");
+	WriteProfileInt("DataItemMap\\byte2\\bit2","AddressHigh",0x18);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","AddressLow",0x19);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","Multiplier",5);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte2\\bit2","Decimals",3);
+	WriteProfileString("DataItemMap\\byte2\\bit2","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte2\\bit3","Name","Front O2 Sensor #1");
+	WriteProfileInt("DataItemMap\\byte2\\bit3","AddressHigh",0x16);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","AddressLow",0x17);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","Multiplier",5);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte2\\bit3","Decimals",3);
+	WriteProfileString("DataItemMap\\byte2\\bit3","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte2\\bit4","Name","Throttle Opening Angle");
+	WriteProfileInt("DataItemMap\\byte2\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","AddressLow",0x15);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte2\\bit4","Decimals",2);
+	WriteProfileString("DataItemMap\\byte2\\bit4","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte2\\bit5","Name","Mass Air Flow");
+	WriteProfileInt("DataItemMap\\byte2\\bit5","AddressHigh",0x13);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","AddressLow",0x14);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte2\\bit5","Decimals",2);
+	WriteProfileString("DataItemMap\\byte2\\bit5","Unit","g/s");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte2\\bit6","Name","Intake Air Temperature");
+	WriteProfileInt("DataItemMap\\byte2\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","AddressLow",0x12);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","Type",TYPE_TEMPERATURE);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","Subtract",40);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte2\\bit6","Unit","°C");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte2\\bit7","Name","Ignition Timing");
+	WriteProfileInt("DataItemMap\\byte2\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","AddressLow",0x11);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","Divisor",2);
+	WriteProfileInt("DataItemMap\\byte2\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte2\\bit7","Unit","°BTDC");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte2\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte2\\bit8","Name","Vehicle Speed");
+	WriteProfileInt("DataItemMap\\byte2\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","AddressLow",0x10);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","Type",TYPE_SPEED);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte2\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte2\\bit8","Unit","KPH");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3","ByteIndex",3);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte3\\bit1","Name","Atmospheric Pressure");
+	WriteProfileInt("DataItemMap\\byte3\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","AddressLow",0x23);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","Type",TYPE_PRESSURE);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","Multiplier",37);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte3\\bit1","Decimals",3);
+	WriteProfileString("DataItemMap\\byte3\\bit1","Unit","PSI");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte3\\bit2","Name","Knock Correction");
+	WriteProfileInt("DataItemMap\\byte3\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","AddressLow",0x22);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","Divisor",2);
+	WriteProfileInt("DataItemMap\\byte3\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte3\\bit2","Unit","°BTDC");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte3\\bit3","Name","Fuel Injector #2 Pulse Width");
+	WriteProfileInt("DataItemMap\\byte3\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","AddressLow",0x21);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","Type",TYPE_INJECTOR);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","Multiplier",256);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte3\\bit3","Decimals",2);
+	WriteProfileString("DataItemMap\\byte3\\bit3","Unit","ms");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte3\\bit4","Name","Fuel Injector #1 Pulse Width");
+	WriteProfileInt("DataItemMap\\byte3\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","AddressLow",0x20);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","Type",TYPE_INJECTOR);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","Multiplier",256);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte3\\bit4","Decimals",2);
+	WriteProfileString("DataItemMap\\byte3\\bit4","Unit","ms");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte3\\bit5","Name","Differential Pressure Sensor Voltage");
+	WriteProfileInt("DataItemMap\\byte3\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","AddressLow",0x1F);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte3\\bit5","Decimals",3);
+	WriteProfileString("DataItemMap\\byte3\\bit5","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte3\\bit6","Name","Throttle Sensor Voltage");
+	WriteProfileInt("DataItemMap\\byte3\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","AddressLow",0x1E);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte3\\bit6","Decimals",3);
+	WriteProfileString("DataItemMap\\byte3\\bit6","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte3\\bit7","Name","Air Flow Sensor Voltage");
+	WriteProfileInt("DataItemMap\\byte3\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","AddressLow",0x1D);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte3\\bit7","Decimals",3);
+	WriteProfileString("DataItemMap\\byte3\\bit7","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte3\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte3\\bit8","Name","Battery Voltage");
+	WriteProfileInt("DataItemMap\\byte3\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","AddressLow",0x1C);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","Multiplier",8);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte3\\bit8","Decimals",3);
+	WriteProfileString("DataItemMap\\byte3\\bit8","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4","ByteIndex",4);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte4\\bit1","Name","Front O2 Heater #1");
+	WriteProfileInt("DataItemMap\\byte4\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","AddressLow",0x2B);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","Multiplier",1004);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","Divisor",25600);
+	WriteProfileInt("DataItemMap\\byte4\\bit1","Decimals",3);
+	WriteProfileString("DataItemMap\\byte4\\bit1","Unit","Amps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte4\\bit2","Name","Fuel Temperature");
+	WriteProfileInt("DataItemMap\\byte4\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","AddressLow",0x2A);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","Type",TYPE_TEMPERATURE);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","Subtract",40);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit2","Decimals",2);
+	WriteProfileString("DataItemMap\\byte4\\bit2","Unit","°C");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte4\\bit3","Name","Accelerator Opening Angle");
+	WriteProfileInt("DataItemMap\\byte4\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","AddressLow",0x29);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","Divisor",256);
+	WriteProfileInt("DataItemMap\\byte4\\bit3","Decimals",2);
+	WriteProfileString("DataItemMap\\byte4\\bit3","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte4\\bit4","Name","Learned Ignition Timing");
+	WriteProfileInt("DataItemMap\\byte4\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","AddressLow",0x28);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","Divisor",2);
+	WriteProfileInt("DataItemMap\\byte4\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte4\\bit4","Unit","°BTDC");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte4\\bit5","Name","CO Adjustment");
+	WriteProfileInt("DataItemMap\\byte4\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","AddressLow",0x27);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte4\\bit5","Decimals",3);
+	WriteProfileString("DataItemMap\\byte4\\bit5","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte4\\bit6","Name","Fuel Tank Pressure");
+	WriteProfileInt("DataItemMap\\byte4\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","AddressLow",0x26);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","Type",TYPE_PRESSURE);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","Multiplier",35);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","Divisor",10000);
+	WriteProfileInt("DataItemMap\\byte4\\bit6","Decimals",3);
+	WriteProfileString("DataItemMap\\byte4\\bit6","Unit","PSI");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte4\\bit7","Name","Pressure Differential Sensor");
+	WriteProfileInt("DataItemMap\\byte4\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","AddressLow",0x25);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","Multiplier",37);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte4\\bit7","Decimals",3);
+	WriteProfileString("DataItemMap\\byte4\\bit7","Unit","PSI");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte4\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte4\\bit8","Name","Manifold Relative Pressure");
+	WriteProfileInt("DataItemMap\\byte4\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","AddressLow",0x24);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","Type",TYPE_PRESSURE);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","Multiplier",37);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte4\\bit8","Decimals",3);
+	WriteProfileString("DataItemMap\\byte4\\bit8","Unit","PSI");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5","ByteIndex",5);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte5\\bit1","Name","Tumble Valve Position Sensor Right");
+	WriteProfileInt("DataItemMap\\byte5\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","AddressLow",0x33);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte5\\bit1","Decimals",3);
+	WriteProfileString("DataItemMap\\byte5\\bit1","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte5\\bit2","Name","CPC Valve Duty Ratio");
+	WriteProfileInt("DataItemMap\\byte5\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","AddressLow",0x32);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte5\\bit2","Decimals",2);
+	WriteProfileString("DataItemMap\\byte5\\bit2","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte5\\bit3","Name","Secondary Wastegate Duty Cycle");
+	WriteProfileInt("DataItemMap\\byte5\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","AddressLow",0x31);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte5\\bit3","Decimals",2);
+	WriteProfileString("DataItemMap\\byte5\\bit3","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte5\\bit4","Name","Primary Wastegate Duty Cycle");
+	WriteProfileInt("DataItemMap\\byte5\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","AddressLow",0x30);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte5\\bit4","Decimals",2);
+	WriteProfileString("DataItemMap\\byte5\\bit4","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte5\\bit6","Name","Fuel Level");
+	WriteProfileInt("DataItemMap\\byte5\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","AddressLow",0x2E);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte5\\bit6","Decimals",3);
+	WriteProfileString("DataItemMap\\byte5\\bit6","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte5\\bit7","Name","Front O2 Heater #2");
+	WriteProfileInt("DataItemMap\\byte5\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","AddressLow",0x2D);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","Multiplier",1004);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","Divisor",25600);
+	WriteProfileInt("DataItemMap\\byte5\\bit7","Decimals",3);
+	WriteProfileString("DataItemMap\\byte5\\bit7","Unit","Amps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte5\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte5\\bit8","Name","Rear O2 Heater Current");
+	WriteProfileInt("DataItemMap\\byte5\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","AddressLow",0x2C);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","Multiplier",1004);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","Divisor",25600);
+	WriteProfileInt("DataItemMap\\byte5\\bit8","Decimals",3);
+	WriteProfileString("DataItemMap\\byte5\\bit8","Unit","Amps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6","ByteIndex",6);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte6\\bit1","Name","Fuel Pump Duty");
+	WriteProfileInt("DataItemMap\\byte6\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","AddressLow",0x3B);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte6\\bit1","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit1","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte6\\bit2","Name","Alternator Duty");
+	WriteProfileInt("DataItemMap\\byte6\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","AddressLow",0x3A);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit2","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit2","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte6\\bit3","Name","Number Of Ex. Gas Recirc Steps");
+	WriteProfileInt("DataItemMap\\byte6\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","AddressLow",0x39);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit3","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit3","Unit","steps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte6\\bit4","Name","Idle Speed Control Valve Step");
+	WriteProfileInt("DataItemMap\\byte6\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","AddressLow",0x38);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit4","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit4","Unit","steps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte6\\bit5","Name","Air/Fuel Heater Duty");
+	WriteProfileInt("DataItemMap\\byte6\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","AddressLow",0x37);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte6\\bit5","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit5","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte6\\bit6","Name","Air/Fuel Lean Correction");
+	WriteProfileInt("DataItemMap\\byte6\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","AddressLow",0x36);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte6\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit6","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte6\\bit7","Name","Idle Speed Control Valve Duty Ratio");
+	WriteProfileInt("DataItemMap\\byte6\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","AddressLow",0x35);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","Divisor",2);
+	WriteProfileInt("DataItemMap\\byte6\\bit7","Decimals",2);
+	WriteProfileString("DataItemMap\\byte6\\bit7","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte6\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte6\\bit8","Name","Tumble Valve Position Sensor Left");
+	WriteProfileInt("DataItemMap\\byte6\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","AddressLow",0x34);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte6\\bit8","Decimals",3);
+	WriteProfileString("DataItemMap\\byte6\\bit8","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7","ByteIndex",7);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte7\\bit1","Name","Air/Fuel Sensor #2 Current");
+	WriteProfileInt("DataItemMap\\byte7\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","AddressLow",0x43);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","Multiplier",125);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte7\\bit1","Decimals",3);
+	WriteProfileString("DataItemMap\\byte7\\bit1","Unit","mA");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte7\\bit2","Name","Air/Fuel Sensor #2 Current");
+	WriteProfileInt("DataItemMap\\byte7\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","AddressLow",0x42);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","Multiplier",125);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte7\\bit2","Decimals",3);
+	WriteProfileString("DataItemMap\\byte7\\bit1","Unit","mA");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte7\\bit3","Name","Intake OCV Current Left");
+	WriteProfileInt("DataItemMap\\byte7\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","AddressLow",0x41);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","Multiplier",32);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit3","Decimals",3);
+	WriteProfileString("DataItemMap\\byte7\\bit3","Unit","mA");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte7\\bit4","Name","Intake OCV Current Right");
+	WriteProfileInt("DataItemMap\\byte7\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","AddressLow",0x40);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","Multiplier",32);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit4","Decimals",3);
+	WriteProfileString("DataItemMap\\byte7\\bit4","Unit","mA");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte7\\bit5","Name","Intake OCV Duty Left");
+	WriteProfileInt("DataItemMap\\byte7\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","AddressLow",0x3F);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte7\\bit5","Decimals",2);
+	WriteProfileString("DataItemMap\\byte7\\bit5","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte7\\bit6","Name","Intake OCV Duty Right");
+	WriteProfileInt("DataItemMap\\byte7\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","AddressLow",0x3E);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte7\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte7\\bit6","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte7\\bit7","Name","Intake VVT Advance Angle Left");
+	WriteProfileInt("DataItemMap\\byte7\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","AddressLow",0x3D);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","Subtract",50);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte7\\bit7","Unit","°");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte7\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte7\\bit8","Name","Intake VVT Advance Angle Right");
+	WriteProfileInt("DataItemMap\\byte7\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","AddressLow",0x3D);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","Subtract",50);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte7\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte7\\bit8","Unit","°");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8","ByteIndex",8);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte8\\bit1","Name","Air/Fuel Adjustment Voltage");
+	WriteProfileInt("DataItemMap\\byte8\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","AddressLow",0xD3);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte8\\bit1","Decimals",3);
+	WriteProfileString("DataItemMap\\byte8\\bit1","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte8\\bit2","Name","Rear O2 Heater Voltage");
+	WriteProfileInt("DataItemMap\\byte8\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","AddressLow",0xD2);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte8\\bit2","Decimals",3);
+	WriteProfileString("DataItemMap\\byte8\\bit2","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte8\\bit3","Name","Air/Fuel Learning #3");
+	WriteProfileInt("DataItemMap\\byte8\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","AddressLow",0xD1);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte8\\bit3","Decimals",2);
+	WriteProfileString("DataItemMap\\byte8\\bit3","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte8\\bit4","Name","Air/Fuel Correction #3");
+	WriteProfileInt("DataItemMap\\byte8\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","AddressLow",0xD0);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte8\\bit4","Decimals",2);
+	WriteProfileString("DataItemMap\\byte8\\bit4","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte8\\bit5","Name","Air/Fuel Sensor #2");
+	WriteProfileInt("DataItemMap\\byte8\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","AddressLow",0x47);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","Type",TYPE_AIRFUEL);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte8\\bit5","Decimals",2);
+	WriteProfileString("DataItemMap\\byte8\\bit5","Unit","Lambda");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte8\\bit6","Name","Air/Fuel Sensor #1");
+	WriteProfileInt("DataItemMap\\byte8\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","AddressLow",0x46);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","Type",TYPE_AIRFUEL);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte8\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte8\\bit6","Unit","Lambda");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte8\\bit7","Name","Air/Fuel Sensor #2 Resistance");
+	WriteProfileInt("DataItemMap\\byte8\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","AddressLow",0x45);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit7","Decimals",3);
+	WriteProfileString("DataItemMap\\byte8\\bit7","Unit","Ohms");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte8\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte8\\bit8","Name","Air/Fuel Sensor #1 Resistance");
+	WriteProfileInt("DataItemMap\\byte8\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","AddressLow",0x44);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte8\\bit8","Decimals",3);
+	WriteProfileString("DataItemMap\\byte8\\bit8","Unit","Ohms");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte9","ByteIndex",9);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte9\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte9\\bit6","Name","Gear Position");
+	WriteProfileInt("DataItemMap\\byte9\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","AddressLow",0x4A);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","Addition",1);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte9\\bit6","Decimals",3);
+	WriteProfileString("DataItemMap\\byte9\\bit6","Unit","gear");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte10","ByteIndex",10);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte10\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte10\\bit4","Name","Air/Fuel Sensor #2 Heater Current");
+	WriteProfileInt("DataItemMap\\byte10\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","AddressLow",0x54);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","Divisor",10);
+	WriteProfileInt("DataItemMap\\byte10\\bit4","Decimals",3);
+	WriteProfileString("DataItemMap\\byte10\\bit4","Unit","amps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte10\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte10\\bit5","Name","Air/Fuel Sensor #1 Heater Current");
+	WriteProfileInt("DataItemMap\\byte10\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","AddressLow",0x53);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","Divisor",10);
+	WriteProfileInt("DataItemMap\\byte10\\bit5","Decimals",3);
+	WriteProfileString("DataItemMap\\byte10\\bit5","Unit","amps");
+
+CATCHCATCH("ecuExplorer::WriteDefaultDataItemMap_byte1_byte10()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+long ecuExplorer::WriteDefaultDataItemMap_byte11_byte20()
+{
+	CString sError;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte12","ByteIndex",12);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte12\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte12\\bit5","Name","Read Memory Connector");
+	WriteProfileInt("DataItemMap\\byte12\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","AddressLow",0x61);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte12\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte12\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte12\\bit6","Name","Test Mode Connector");
+	WriteProfileInt("DataItemMap\\byte12\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","AddressLow",0x61);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte12\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte12\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte12\\bit7","Name","AT Vehicle ID");
+	WriteProfileInt("DataItemMap\\byte12\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","AddressLow",0x61);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte12\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte12\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13","ByteIndex",13);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte13\\bit2","Name","Air Conditioning Switch");
+	WriteProfileInt("DataItemMap\\byte13\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","AddressLow",0x62);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte13\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte13\\bit3","Name","Power Steering Switch");
+	WriteProfileInt("DataItemMap\\byte13\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","AddressLow",0x62);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte13\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte13\\bit4","Name","Ignition Switch");
+	WriteProfileInt("DataItemMap\\byte13\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","AddressLow",0x62);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte13\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte13\\bit5","Name","Intercooler Auto-Wash Switch");
+	WriteProfileInt("DataItemMap\\byte13\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","AddressLow",0x62);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte13\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte13\\bit7","Name","Idle Switch");
+	WriteProfileInt("DataItemMap\\byte13\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","AddressLow",0x62);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte13\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte13\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte13\\bit8","Name","Neutral Position Switch");
+	WriteProfileInt("DataItemMap\\byte13\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","AddressLow",0x62);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte13\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte13\\bit8","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14","ByteIndex",14);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte14\\bit1","Name","Electrical Load Signal");
+	WriteProfileInt("DataItemMap\\byte14\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte14\\bit2","Name","Knock Signal #2");
+	WriteProfileInt("DataItemMap\\byte14\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte14\\bit3","Name","Knock Signal #1");
+	WriteProfileInt("DataItemMap\\byte14\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte14\\bit4","Name","Front O2 #2 Rich Signal");
+	WriteProfileInt("DataItemMap\\byte14\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte14\\bit5","Name","Rear O2 Rich Signal");
+	WriteProfileInt("DataItemMap\\byte14\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte14\\bit6","Name","Front O2 Rich Signal");
+	WriteProfileInt("DataItemMap\\byte14\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte14\\bit7","Name","Starter Switch");
+	WriteProfileInt("DataItemMap\\byte14\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte14\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte14\\bit8","Name","Handle Switch");
+	WriteProfileInt("DataItemMap\\byte14\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","AddressLow",0x63);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte14\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte14\\bit8","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15","ByteIndex",15);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte15\\bit1","Name","Air-Con Mid Pressure Switch");
+	WriteProfileInt("DataItemMap\\byte15\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte15\\bit2","Name","Air-Con Lock Signal");
+	WriteProfileInt("DataItemMap\\byte15\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte15\\bit3","Name","Wiper Switch");
+	WriteProfileInt("DataItemMap\\byte15\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte15\\bit4","Name","Interior Light Switch");
+	WriteProfileInt("DataItemMap\\byte15\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte15\\bit5","Name","Blower Switch");
+	WriteProfileInt("DataItemMap\\byte15\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte15\\bit6","Name","Defogger Switch");
+	WriteProfileInt("DataItemMap\\byte15\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte15\\bit7","Name","Cam Position Sensor");
+	WriteProfileInt("DataItemMap\\byte15\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte15\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte15\\bit8","Name","Crank Position Sensor");
+	WriteProfileInt("DataItemMap\\byte15\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","AddressLow",0x64);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte15\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte15\\bit8","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16","ByteIndex",16);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte16\\bit1","Name","Blow-By Leak Connector");
+	WriteProfileInt("DataItemMap\\byte16\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte16\\bit2","Name","CPC Solenoid Valve");
+	WriteProfileInt("DataItemMap\\byte16\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte16\\bit3","Name","Intercooler Auto-Wash Relay");
+	WriteProfileInt("DataItemMap\\byte16\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte16\\bit4","Name","Fuel Pump Relay");
+	WriteProfileInt("DataItemMap\\byte16\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte16\\bit5","Name","Radiator Fan Relay #2");
+	WriteProfileInt("DataItemMap\\byte16\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte16\\bit6","Name","Radiator Fan Relay #1");
+	WriteProfileInt("DataItemMap\\byte16\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte16\\bit7","Name","Radiator Fan Relay #3");
+	WriteProfileInt("DataItemMap\\byte16\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte16\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte16\\bit8","Name","Air-Con Compressor Signal");
+	WriteProfileInt("DataItemMap\\byte16\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","AddressLow",0x65);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte16\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte16\\bit8","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17","ByteIndex",17);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte17\\bit1","Name","Assist Air Solenoid Valve");
+	WriteProfileInt("DataItemMap\\byte17\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte17\\bit2","Name","Power Steering Solenoid Valve");
+	WriteProfileInt("DataItemMap\\byte17\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte17\\bit3","Name","Vent Solenoid Valve");
+	WriteProfileInt("DataItemMap\\byte17\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte17\\bit4","Name","Pressure Sources Change");
+	WriteProfileInt("DataItemMap\\byte17\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte17\\bit5","Name","Variable Intake Air Solenoid");
+	WriteProfileInt("DataItemMap\\byte17\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte17\\bit6","Name","TGV Drive");
+	WriteProfileInt("DataItemMap\\byte17\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte17\\bit7","Name","TGV Output");
+	WriteProfileInt("DataItemMap\\byte17\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte17\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte17\\bit8","Name","PCV Solenoid Valve");
+	WriteProfileInt("DataItemMap\\byte17\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","AddressLow",0x66);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte17\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte17\\bit8","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18","ByteIndex",18);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte18\\bit1","Name","Muffler Control");
+	WriteProfileInt("DataItemMap\\byte18\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte18\\bit2","Name","Intake Air Solenoid");
+	WriteProfileInt("DataItemMap\\byte18\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte18\\bit3","Name","Ex. Gas Negative Pressure");
+	WriteProfileInt("DataItemMap\\byte18\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte18\\bit4","Name","Ex. Gas Positive Pressure");
+	WriteProfileInt("DataItemMap\\byte18\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte18\\bit5","Name","TCS Relief Valve Solenoid");
+	WriteProfileInt("DataItemMap\\byte18\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte18\\bit6","Name","Relief Valve Solenoid #2");
+	WriteProfileInt("DataItemMap\\byte18\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte18\\bit7","Name","Relief Valve Solenoid #1");
+	WriteProfileInt("DataItemMap\\byte18\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte18\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte18\\bit8","Name","Tank Sensor Control Valve");
+	WriteProfileInt("DataItemMap\\byte18\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","AddressLow",0x67);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte18\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte18\\bit8","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte19","ByteIndex",19);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte19\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte19\\bit1","Name","Request Torque Down VDC");
+	WriteProfileInt("DataItemMap\\byte19\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","AddressLow",0x68);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte19\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte19\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte19\\bit2","Name","Ban Of Torque Down");
+	WriteProfileInt("DataItemMap\\byte19\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","AddressLow",0x68);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte19\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte19\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte19\\bit3","Name","Fuel Cut Signal From AT");
+	WriteProfileInt("DataItemMap\\byte19\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","AddressLow",0x68);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte19\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte19\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte19\\bit4","Name","Retard Signal From AT");
+	WriteProfileInt("DataItemMap\\byte19\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","AddressLow",0x68);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte19\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte19\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20","ByteIndex",20);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit1","BitMask",0x1);
+	WriteProfileString("DataItemMap\\byte20\\bit1","Name","AET Signal");
+	WriteProfileInt("DataItemMap\\byte20\\bit1","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit1","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit1","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte20\\bit2","Name","AT Coop. Rich Spike Signal");
+	WriteProfileInt("DataItemMap\\byte20\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte20\\bit3","Name","AT Coop. Lean Burn Signal");
+	WriteProfileInt("DataItemMap\\byte20\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit3","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit3","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte20\\bit4","Name","AT Coop. Lock Up Signal");
+	WriteProfileInt("DataItemMap\\byte20\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte20\\bit5","Name","EAM Signal");
+	WriteProfileInt("DataItemMap\\byte20\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte20\\bit6","Name","Torque Permission Signal");
+	WriteProfileInt("DataItemMap\\byte20\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte20\\bit7","Name","Torque Control Signal #2");
+	WriteProfileInt("DataItemMap\\byte20\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte20\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte20\\bit8","Name","Torque Control Signal #1");
+	WriteProfileInt("DataItemMap\\byte20\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","AddressLow",0x69);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte20\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte20\\bit8","Unit","On/Off");
+
+CATCHCATCH("ecuExplorer::WriteDefaultDataItemMap_byte11_byte20()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+long ecuExplorer::WriteDefaultDataItemMap_byte21_byte30()
+{
+	CString sError;
+
+TRYTRY
+
+CATCHCATCH("ecuExplorer::WriteDefaultDataItemMap_byte21_byte30()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+long ecuExplorer::WriteDefaultDataItemMap_byte31_byte40()
+{
+	CString sError;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte31","ByteIndex",31);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte31\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte31\\bit5","Name","Throttle Motor Voltage");
+	WriteProfileInt("DataItemMap\\byte31\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","AddressLow",0xFB);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","Multiplier",8);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte31\\bit5","Decimals",3);
+	WriteProfileString("DataItemMap\\byte31\\bit5","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte31\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte31\\bit6","Name","Throttle Motor Duty");
+	WriteProfileInt("DataItemMap\\byte31\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","AddressLow",0xFA);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","Subtract",128);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","Divisor",128);
+	WriteProfileInt("DataItemMap\\byte31\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte31\\bit6","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33","ByteIndex",33);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte33\\bit2","Name","Exhaust Gas Temperature");
+	WriteProfileInt("DataItemMap\\byte33\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","AddressLow",0x106);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","Type",TYPE_TEMPERATURE);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","Subtract",40);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","Multiplier",5);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit2","Decimals",2);
+	WriteProfileString("DataItemMap\\byte33\\bit2","Unit","°C");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte33\\bit3","Name","Fuel Pressure (High)");
+	WriteProfileInt("DataItemMap\\byte33\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","AddressLow",0x105);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","Multiplier",4);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte33\\bit3","Decimals",3);
+	WriteProfileString("DataItemMap\\byte33\\bit3","Unit","MPa");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte33\\bit4","Name","Brake Booster Pressure");
+	WriteProfileInt("DataItemMap\\byte33\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","AddressLow",0x104);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","Type",TYPE_PRESSURE);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","Multiplier",37);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte33\\bit4","Decimals",3);
+	WriteProfileString("DataItemMap\\byte33\\bit4","Unit","PSI");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte33\\bit5","Name","Main Accelerator Sensor");
+	WriteProfileInt("DataItemMap\\byte33\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","AddressLow",0x103);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte33\\bit5","Decimals",3);
+	WriteProfileString("DataItemMap\\byte33\\bit5","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte33\\bit6","Name","Sub Accelerator Sensor");
+	WriteProfileInt("DataItemMap\\byte33\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","AddressLow",0x102);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte33\\bit6","Decimals",3);
+	WriteProfileString("DataItemMap\\byte33\\bit6","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte33\\bit7","Name","Main Throttle Sensor");
+	WriteProfileInt("DataItemMap\\byte33\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","AddressLow",0x101);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte33\\bit7","Decimals",3);
+	WriteProfileString("DataItemMap\\byte33\\bit7","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte33\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte33\\bit8","Name","Sub Throttle Sensor");
+	WriteProfileInt("DataItemMap\\byte33\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","AddressLow",0x100);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","Multiplier",2);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","Divisor",100);
+	WriteProfileInt("DataItemMap\\byte33\\bit8","Decimals",3);
+	WriteProfileString("DataItemMap\\byte33\\bit8","Unit","volts");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte34","ByteIndex",34);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte34\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte34\\bit6","Name","Memorized Cruise Speed");
+	WriteProfileInt("DataItemMap\\byte34\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","AddressLow",0x10A);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","Type",TYPE_SPEED);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte34\\bit6","Unit","KPH");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte34\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte34\\bit7","Name","SCV Step");
+	WriteProfileInt("DataItemMap\\byte34\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","AddressLow",0x109);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte34\\bit7","Unit","steps");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte34\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte34\\bit8","Name","Cold Start Injector");
+	WriteProfileInt("DataItemMap\\byte34\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","AddressLow",0x108);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","Type",TYPE_INJECTOR);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","Multiplier",256);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","Divisor",1000);
+	WriteProfileInt("DataItemMap\\byte34\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte34\\bit8","Unit","ms");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36","ByteIndex",36);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36\\bit3","BitMask",0x3);
+	WriteProfileString("DataItemMap\\byte36\\bit3","Name","Exhaust OCV Current Left");
+	WriteProfileInt("DataItemMap\\byte36\\bit3","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","AddressLow",0x11D);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","Addition",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","Multiplier",32);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit3","Decimals",3);
+	WriteProfileString("DataItemMap\\byte36\\bit3","Unit","mA");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte36\\bit4","Name","Exhaust OCV Current Right");
+	WriteProfileInt("DataItemMap\\byte36\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","AddressLow",0x11C);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","Multiplier",32);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit4","Decimals",3);
+	WriteProfileString("DataItemMap\\byte36\\bit4","Unit","mA");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte36\\bit5","Name","Exhaust OCV Duty Left");
+	WriteProfileInt("DataItemMap\\byte36\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","AddressLow",0x11B);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte36\\bit5","Decimals",2);
+	WriteProfileString("DataItemMap\\byte36\\bit5","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte36\\bit6","Name","Exhaust OCV Duty Right");
+	WriteProfileInt("DataItemMap\\byte36\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","AddressLow",0x11A);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","Multiplier",100);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","Divisor",255);
+	WriteProfileInt("DataItemMap\\byte36\\bit6","Decimals",2);
+	WriteProfileString("DataItemMap\\byte36\\bit6","Unit","%");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte36\\bit7","Name","Exhaust VVT Advance Angle Left");
+	WriteProfileInt("DataItemMap\\byte36\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","AddressLow",0x119);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","Subtract",50);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit7","Decimals",2);
+	WriteProfileString("DataItemMap\\byte36\\bit7","Unit","°");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte36\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte36\\bit8","Name","Exhaust VVT Advance Angle Right");
+	WriteProfileInt("DataItemMap\\byte36\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","AddressLow",0x118);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","Subtract",50);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte36\\bit8","Decimals",2);
+	WriteProfileString("DataItemMap\\byte36\\bit8","Unit","°");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte37","ByteIndex",37);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte37\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte37\\bit7","Name","ETC Motor Relay");
+	WriteProfileInt("DataItemMap\\byte37\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","AddressLow",0x120);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte37\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte37\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38","ByteIndex",38);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38\\bit2","BitMask",0x2);
+	WriteProfileString("DataItemMap\\byte38\\bit2","Name","Accelerator Switch");
+	WriteProfileInt("DataItemMap\\byte38\\bit2","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","AddressLow",0x121);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","Addition",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit2","Decimals",0);
+	WriteProfileString("DataItemMap\\byte38\\bit2","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38\\bit4","BitMask",0x4);
+	WriteProfileString("DataItemMap\\byte38\\bit4","Name","Brake Switch");
+	WriteProfileInt("DataItemMap\\byte38\\bit4","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","AddressLow",0x121);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","Addition",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit4","Decimals",0);
+	WriteProfileString("DataItemMap\\byte38\\bit4","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte38\\bit5","Name","Resume/Accelerate Switch");
+	WriteProfileInt("DataItemMap\\byte38\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","AddressLow",0x121);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte38\\bit5","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte38\\bit6","Name","Set/Coast Switch");
+	WriteProfileInt("DataItemMap\\byte38\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","AddressLow",0x121);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte38\\bit6","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte38\\bit7","Name","Stop Light Switch");
+	WriteProfileInt("DataItemMap\\byte38\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","AddressLow",0x121);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte38\\bit7","Unit","On/Off");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte38\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte38\\bit8","Name","Clutch Switch");
+	WriteProfileInt("DataItemMap\\byte38\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","AddressLow",0x121);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","Type",TYPE_SWITCH);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte38\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte38\\bit8","Unit","On/Off");
+
+CATCHCATCH("ecuExplorer::WriteDefaultDataItemMap_byte31_byte40()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+long ecuExplorer::WriteDefaultDataItemMap_byte41_byte50()
+{
+	CString sError;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte48","ByteIndex",48);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte48\\bit5","BitMask",0x5);
+	WriteProfileString("DataItemMap\\byte48\\bit5","Name","Roughness Monitor Cylinder #4");
+	WriteProfileInt("DataItemMap\\byte48\\bit5","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","AddressLow",0xD9);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","Addition",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit5","Decimals",0);
+	WriteProfileString("DataItemMap\\byte48\\bit5","Unit","?");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte48\\bit6","BitMask",0x6);
+	WriteProfileString("DataItemMap\\byte48\\bit6","Name","Roughness Monitor Cylinder #3");
+	WriteProfileInt("DataItemMap\\byte48\\bit6","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","AddressLow",0xD8);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","Addition",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit6","Decimals",0);
+	WriteProfileString("DataItemMap\\byte48\\bit6","Unit","?");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte48\\bit7","BitMask",0x7);
+	WriteProfileString("DataItemMap\\byte48\\bit7","Name","Roughness Monitor Cylinder #2");
+	WriteProfileInt("DataItemMap\\byte48\\bit7","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","AddressLow",0xCF);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","Addition",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit7","Decimals",0);
+	WriteProfileString("DataItemMap\\byte48\\bit7","Unit","?");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	WriteProfileInt("DataItemMap\\byte48\\bit8","BitMask",0x8);
+	WriteProfileString("DataItemMap\\byte48\\bit8","Name","Roughness Monitor Cylinder #1");
+	WriteProfileInt("DataItemMap\\byte48\\bit8","AddressHigh",0x0);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","AddressLow",0xCE);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","Type",TYPE_GENERAL);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","Addition",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","Subtract",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","Multiplier",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","Divisor",0);
+	WriteProfileInt("DataItemMap\\byte48\\bit8","Decimals",0);
+	WriteProfileString("DataItemMap\\byte48\\bit8","Unit","?");
+
+CATCHCATCH("ecuExplorer::WriteDefaultDataItemMap_byte41_byte50()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+***********************************
+
+	LoadDataItemMap();
+
+	if((fhLive = _open("live.dat",_O_BINARY | _O_CREAT | _O_APPEND | _O_WRONLY,_S_IWRITE)) == -1)
+		return F_FILE_ERROR;
+
+	POSITION pos = NULL;
+	LPSTRUCT_BYTEMASK lpByteMask = NULL;
+	LPSTRUCT_BITMASK lpBitMask = NULL;
+	unsigned short usIndex;
+	pos = this->mapDataItemMap.GetStartPosition();
+	while(pos != NULL)
+	{
+		mapDataItemMap.GetNextAssoc(pos,usIndex,(void*&)lpByteMask);
+
+		cRead = (unsigned char)usIndex;
+		_write(fhLive,&cRead,1);
+
+		POSITION posBit = NULL;
+		posBit = lpByteMask->listBitMask.GetHeadPosition();
+		while(posBit != NULL)
+		{
+			lpBitMask = (LPSTRUCT_BITMASK)lpByteMask->listBitMask.GetNext(posBit);
+			_write(fhLive,&lpBitMask->cMask,1);
+			cRead = (unsigned char)lpBitMask->szName.GetLength();
+			_write(fhLive,&cRead,1);
+			_write(fhLive,lpBitMask->szName,lpBitMask->szName.GetLength());
+			_write(fhLive,(unsigned char*)&lpBitMask->ulAddress_high,sizeof(lpBitMask->ulAddress_high));
+			_write(fhLive,(unsigned char*)&lpBitMask->ulAddress_low,sizeof(lpBitMask->ulAddress_low));
+			_write(fhLive,(unsigned char*)&lpBitMask->cType,sizeof(lpBitMask->cType));
+			_write(fhLive,(unsigned char*)&lpBitMask->usOperand_addition,sizeof(lpBitMask->usOperand_addition));
+			_write(fhLive,(unsigned char*)&lpBitMask->usOperand_subtract,sizeof(lpBitMask->usOperand_subtract));
+			_write(fhLive,(unsigned char*)&lpBitMask->usOperand_multiplier,sizeof(lpBitMask->usOperand_multiplier));
+			_write(fhLive,(unsigned char*)&lpBitMask->usOperand_divisor,sizeof(lpBitMask->usOperand_divisor));
+			_write(fhLive,(unsigned char*)&lpBitMask->usDecimals,sizeof(lpBitMask->usDecimals));
+			cRead = (unsigned char)lpBitMask->szUnit.GetLength();
+			_write(fhLive,&cRead,1);
+			_write(fhLive,lpBitMask->szUnit,lpBitMask->szUnit.GetLength());
+
+			lpBitMask->cChecksum = lpBitMask->cMask;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->szName.GetLength();
+			lpBitMask->cChecksum += GenerateChecksum(lpBitMask->szName,lpBitMask->szName.GetLength());
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->ulAddress_high;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->ulAddress_low;
+			lpBitMask->cChecksum += lpBitMask->cType;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->usOperand_addition;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->usOperand_subtract;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->usOperand_multiplier;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->usOperand_divisor;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->usDecimals;
+			lpBitMask->cChecksum += (unsigned char)lpBitMask->szUnit.GetLength();
+			lpBitMask->cChecksum += GenerateChecksum(lpBitMask->szUnit,lpBitMask->szUnit.GetLength());
+			// generate checksum
+			_write(fhLive,&lpBitMask->cChecksum,1);
+		}
+	}
+	_close(fhLive);
+
+********************************************************
+
+this comms routine works great but delay of ~188ms.  think its because of larger
+read for full message length.
+
+EXCEPTION_BOOKMARK(__LINE__)
+				if((lResult = lpParent->Read(&lpBuffer[usBufferPointer],usMessageLength)) < usMessageLength)
+				{
+					sError.Format("read [%i] returned less than message length [%i]",lResult,usMessageLength);
+					OutputString(sError,MESSAGETYPE_WARNING);
+
+					usBufferPointer += (unsigned short)lResult;
+					usOutstanding = usMessageLength - (unsigned short)lResult;
+					usProtection = 1024;
+					while(usOutstanding > 0)
+					{
+						if((lResult = lpParent->Read(&lpBuffer[usBufferPointer],1)) > 0)
+						{
+							usOutstanding -= (unsigned short)lResult;
+							usBufferPointer += (unsigned short)lResult;
+						}
+						else if(usProtection-- <= 0)
+							break;
+					}
+
+					if(usProtection <= 0)
+						goto LOOP_EXIT;
+				}
+				else
+					usBufferPointer += (unsigned short)lResult;
+
+********************************************************
+
+/*/
+	FLAG DEFINITIONS
+/*/
+#define BITMASK_ENGINE_SPEED							0x01
+#define BITMASK_MANIFOLD_ABSOLUTE_PRESSURE				0x02
+#define BITMASK_AIR_FUEL_LEARNING_2						0x04
+#define BITMASK_AIR_FUEL_CORRECTION_2					0x08
+#define BITMASK_AIR_FUEL_LEARNING_1						0x10
+#define BITMASK_AIR_FUEL_CORRECTION_1					0x20
+#define BITMASK_COOLANT_TEMPERATURE						0x40
+#define BITMASK_ENGINE_LOAD								0x80
+
+#define BITMASK_FRONT_O2_SENSOR_2						0x01
+#define BITMASK_REAR_O2_SENSOR							0x02
+#define BITMASK_FRONT_O2_SENSOR_1						0x04
+#define BITMASK_THROTTLE_OPENING_ANGLE					0x08
+#define BITMASK_MASS_AIR_FLOW							0x10
+#define BITMASK_INTAKE_AIR_TEMPERATURE					0x20
+#define BITMASK_IGNITION_TIMING							0x40
+#define BITMASK_VEHICLE_SPEED							0x80
+
+#define BITMASK_ATMOSPHERIC_PRESSURE					0x01
+#define BITMASK_KNOCK_CORRECTION						0x02
+#define BITMASK_FUEL_INJECTOR_2_PULSE_WIDTH				0x04
+#define BITMASK_FUEL_INJECTOR_1_PULSE_WIDTH				0x08
+#define BITMASK_DIFFERENTIAL_PRESSURE_SENSOR_VOLTAGE	0x10
+#define BITMASK_THROTTLE_SENSOR_VOLTAGE					0x20
+#define BITMASK_AIR_FLOW_SENSOR_VOLTAGE					0x40
+#define BITMASK_BATTERY_VOLTAGE							0x80
+
+#define BITMASK_FRONT_O2_HEATER_1						0x01
+#define BITMASK_FUEL_TEMPERATURE						0x02
+#define BITMASK_ACCELERATOR_OPENING_ANGLE				0x04
+#define BITMASK_LEARNED_IGNITION_TIMING					0x08
+#define BITMASK_CO_ADJUSTMENT							0x10
+#define BITMASK_FUEL_TANK_PRESSURE						0x20
+#define BITMASK_DIFFERENTIAL_PRESSURE_SENSOR			0x40
+#define BITMASK_MANIFOLD_RELATIVE_PRESSURE				0x80
+
+#define BITMASK_TUMBLE_VALVE_POSITION_SENSOR_RIGHT		0x01
+#define BITMASK_CPC_VALVE_DUTY_RATIO					0x02
+#define BITMASK_SECONDARY_WASTEGATE_DUTY_CYCLE			0x04
+#define BITMASK_PRIMARY_WASTEGATE_DUTY_CYCLE			0x08
+#define BITMASK_BYTE5_UNKNOWN_1							0x10
+#define BITMASK_FUEL_LEVEL								0x20
+#define BITMASK_FRONT_O2_HEATER_2						0x40
+#define BITMASK_REAR_O2_HEATER_CURRENT					0x80
+
+#define BITMASK_FUEL_PUMP_DUTY							0x01
+#define BITMASK_ALTERNATOR_DUTY							0x02
+#define BITMASK_NUMBER_OF_EXHAUST_GAS_RECYCLE_STEPS		0x04
+#define BITMASK_IDLE_SPEED_CONTROL_VALVE_STEP			0x08
+#define BITMASK_AIR_FUEL_HEATER_DUTY					0x10
+#define BITMASK_AIR_FUEL_LEAN_CORRECTION				0x20
+#define BITMASK_IDLE_SPEED_CONTROL_VALVE_DUTY_RATIO		0x40
+#define BITMASK_TUMBLE_VALVE_POSITION_SENSOR_LEFT		0x80
+
+#define BITMASK_AIR_FUEL_SENSOR_2_CURRENT				0x01
+#define BITMASK_AIR_FUEL_SENSOR_1_CURRENT				0x02
+#define BITMASK_OCV_CURRENT_LEFT						0x04
+#define BITMASK_OCV_CURRENT_RIGHT						0x08
+#define BITMASK_OCV_DUTY_LEFT							0x10
+#define BITMASK_OCV_DUTY_RIGHT							0x20
+#define BITMASK_VVT_ADVANCE_ANGLE_LEFT					0x40
+#define BITMASK_VVT_ADVANCE_ANGLE_RIGHT					0x80
+
+#define BITMASK_AIR_FUEL_ADJUSTMENT_VOLTAGE				0x01
+#define BITMASK_REAR_O2_HEATER_VOLTAGE					0x02
+#define BITMASK_AIR_FUEL_LEARNING_3						0x04
+#define BITMASK_AIR_FUEL_CORRECTION_3					0x08
+#define BITMASK_AIR_FUEL_SENSOR_2						0x10
+#define BITMASK_AIR_FUEL_SENSOR_1						0x20
+#define BITMASK_AIR_FUEL_SENSOR_2_RESISTANCE			0x40
+#define BITMASK_AIR_FUEL_SENSOR_1_RESISTANCE			0x80
+
+#define BITMASK_BYTE9_UNKNOWN_1							0x01
+#define BITMASK_BYTE9_UNKNOWN_2							0x02
+#define BITMASK_BYTE9_UNKNOWN_3							0x04
+#define BITMASK_BYTE9_UNKNOWN_4							0x08
+#define BITMASK_BYTE9_UNKNOWN_5							0x10
+#define BITMASK_GEAR_POSITION							0x20
+#define BITMASK_BYTE9_UNKNOWN_6							0x40
+#define BITMASK_BYTE9_UNKNOWN_7							0x80
+
+#define BITMASK_BYTE10_UNKNOWN_1						0x01
+#define BITMASK_BYTE10_UNKNOWN_2						0x02
+#define BITMASK_BYTE10_UNKNOWN_3						0x04
+#define BITMASK_AIR_FUEL_SENSOR_2_HEATER_CURRENT		0x08
+#define BITMASK_AIR_FUEL_SENSOR_1_HEATER_CURRENT		0x10
+#define BITMASK_BYTE10_UNKNOWN_4						0x20
+#define BITMASK_BYTE10_UNKNOWN_5						0x40
+#define BITMASK_BYTE10_UNKNOWN_6						0x80
+
+#define BITMASK_BYTE11_UNKNOWN_1						0x01
+#define BITMASK_BYTE11_UNKNOWN_2						0x02
+#define BITMASK_BYTE11_UNKNOWN_3						0x04
+#define BITMASK_BYTE11_UNKNOWN_4						0x08
+#define BITMASK_BYTE11_UNKNOWN_5						0x10
+#define BITMASK_BYTE11_UNKNOWN_6						0x20
+#define BITMASK_BYTE11_UNKNOWN_7						0x40
+#define BITMASK_BYTE11_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE12_UNKNOWN_1						0x01
+#define BITMASK_BYTE12_UNKNOWN_2						0x02
+#define BITMASK_BYTE12_UNKNOWN_3						0x04
+#define BITMASK_BYTE12_UNKNOWN_4						0x08
+#define BITMASK_READ_MEMORY_CONNECTOR					0x10
+#define BITMASK_TEST_MODE_CONNECTOR						0x20
+#define BITMASK_AT_VEHICLE_ID							0x40
+#define BITMASK_BYTE12_UNKNOWN_5						0x80
+
+#define BITMASK_BYTE13_UNKNOWN_1						0x01
+#define BITMASK_AIR_CON_SWITCH							0x02
+#define BITMASK_POWER_STEERING_SWITCH					0x04
+#define BITMASK_IGNITION_SWITCH							0x08
+#define BITMASK_INTERCOOLER_AUTO_WASH_SWITCH			0x10
+#define BITMASK_BYTE13_UNKNOWN_2						0x20
+#define BITMASK_IDLE_SWITCH								0x40
+#define BITMASK_NEUTRAL_POSITION_SWITCH					0x80
+
+#define BITMASK_ELECTRICAL_LOAD_SIGNAL					0x01
+#define BITMASK_KNOCK_SIGNAL_2							0x02
+#define BITMASK_KNOCK_SIGNAL_1							0x04
+#define BITMASK_FRONT_O2_2_RICH_SIGNAL					0x08
+#define BITMASK_REAR_O2_RICH_SIGNAL						0x10
+#define BITMASK_FRONT_O2_RICH_SIGNAL					0x20
+#define BITMASK_STARTER_SWITCH							0x40
+#define BITMASK_HANDLE_SWITCH							0x80
+
+#define BITMASK_AIR_CON_MID_PRESSURE_SWITCH				0x01
+#define BITMASK_AIR_CON_LOCK_SIGNAL						0x02
+#define BITMASK_WIPER_SWITCH							0x04
+#define BITMASK_INTERIOR_LIGHT_SWITCH					0x08
+#define BITMASK_BLOWER_SWITCH							0x10
+#define BITMASK_DEFOGGER_SWITCH							0x20
+#define BITMASK_CAM_POSITION_SENSOR						0x40
+#define BITMASK_CRANK_POSITION_SENSOR					0x80
+
+#define BITMASK_BLOWBY_LEAK_CONNECTOR					0x01
+#define BITMASK_CPC_SOLENOID_VALVE						0x02
+#define BITMASK_INTERCOOLER_AUTO_WASH_RELAY				0x04
+#define BITMASK_FUEL_PUMP_RELAY							0x08
+#define BITMASK_RADIATOR_FAN_RELAY_2					0x10
+#define BITMASK_RADIATOR_FAN_RELAY_1					0x20
+#define BITMASK_RADIATOR_FAN_RELAY_3					0x40
+#define BITMASK_AIR_CON_COMPRESSOR_SIGNAL				0x80
+
+#define BITMASK_ASSIST_AIR_SOLENOID_VALVE				0x01
+#define BITMASK_PS_SOLENOID_VALVE						0x02
+#define BITMASK_VENT_SOLENOID_VALVE						0x04
+#define BITMASK_PRESSURE_SOURCES_CHANGE					0x08
+#define BITMASK_VARIABLE_AIR_INTAKE_SOLENOID			0x10
+#define BITMASK_TGV_DRIVE								0x20
+#define BITMASK_TGV_OUTPUT								0x40
+#define BITMASK_PCV_SOLENOID_VALVE						0x80
+
+#define BITMASK_MUFFLER_CONTROL							0x01
+#define BITMASK_INTAKE_AIR_SOLENOID						0x02
+#define BITMASK_EXHAUST_GAS_NEGATIVE_POSITION			0x04
+#define BITMASK_EXHAUST_GAS_POSITIVE_POSITION			0x08
+#define BITMASK_TCS_RELIEF_VALVE_SOLENOID				0x10
+#define BITMASK_RELIEF_VALVE_SOLENOID_2					0x20
+#define BITMASK_RELIEF_VALVE_SOLENOID_1					0x40
+#define BITMASK_TANK_SENSOR_CONTROL_VALVE				0x80
+
+#define BITMASK_REQUEST_TORQUE_DOWN_VDC					0x01
+#define BITMASK_BAN_OF_TORQUE_DOWN						0x02
+#define BITMASK_FUEL_CUT_SIGNAL_FROM_AT					0x04
+#define BITMASK_RETARD_SIGNAL_FROM_AT					0x08
+#define BITMASK_BYTE19_UNKNOWN_1						0x10
+#define BITMASK_BYTE19_UNKNOWN_2						0x20
+#define BITMASK_BYTE19_UNKNOWN_3						0x40
+#define BITMASK_BYTE19_UNKNOWN_4						0x80
+
+#define BITMASK_AET_SIGNAL								0x01
+#define BITMASK_AT_COOP_RICH_SPIKE_SIGNAL				0x02
+#define BITMASK_AT_COOP_LEAN_BURN_SIGNAL				0x04
+#define BITMASK_AT_COOP_LOCK_UP_SIGNAL					0x08
+#define BITMASK_EAM_SIGNAL								0x10
+#define BITMASK_TORQUE_PERMISSION_SIGNAL				0x20
+#define BITMASK_TORQUE_CONTROL_SIGNAL_1					0x40
+#define BITMASK_TORQUE_CONTROL_SIGNAL_2					0x80
+
+#define BITMASK_BYTE21_UNKNOWN_1						0x01
+#define BITMASK_BYTE21_UNKNOWN_2						0x02
+#define BITMASK_BYTE21_UNKNOWN_3						0x04
+#define BITMASK_BYTE21_UNKNOWN_4						0x08
+#define BITMASK_BYTE21_UNKNOWN_5						0x10
+#define BITMASK_BYTE21_UNKNOWN_6						0x20
+#define BITMASK_BYTE21_UNKNOWN_7						0x40
+#define BITMASK_BYTE21_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE22_UNKNOWN_1						0x01
+#define BITMASK_BYTE22_UNKNOWN_2						0x02
+#define BITMASK_BYTE22_UNKNOWN_3						0x04
+#define BITMASK_BYTE22_UNKNOWN_4						0x08
+#define BITMASK_BYTE22_UNKNOWN_5						0x10
+#define BITMASK_BYTE22_UNKNOWN_6						0x20
+#define BITMASK_BYTE22_UNKNOWN_7						0x40
+#define BITMASK_BYTE22_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE23_UNKNOWN_1						0x01
+#define BITMASK_BYTE23_UNKNOWN_2						0x02
+#define BITMASK_BYTE23_UNKNOWN_3						0x04
+#define BITMASK_BYTE23_UNKNOWN_4						0x08
+#define BITMASK_BYTE23_UNKNOWN_5						0x10
+#define BITMASK_BYTE23_UNKNOWN_6						0x20
+#define BITMASK_BYTE23_UNKNOWN_7						0x40
+#define BITMASK_BYTE23_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE24_UNKNOWN_1						0x01
+#define BITMASK_BYTE24_UNKNOWN_2						0x02
+#define BITMASK_BYTE24_UNKNOWN_3						0x04
+#define BITMASK_BYTE24_UNKNOWN_4						0x08
+#define BITMASK_BYTE24_UNKNOWN_5						0x10
+#define BITMASK_BYTE24_UNKNOWN_6						0x20
+#define BITMASK_BYTE24_UNKNOWN_7						0x40
+#define BITMASK_BYTE24_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE25_UNKNOWN_1						0x01
+#define BITMASK_BYTE25_UNKNOWN_2						0x02
+#define BITMASK_BYTE25_UNKNOWN_3						0x04
+#define BITMASK_BYTE25_UNKNOWN_4						0x08
+#define BITMASK_BYTE25_UNKNOWN_5						0x10
+#define BITMASK_BYTE25_UNKNOWN_6						0x20
+#define BITMASK_BYTE25_UNKNOWN_7						0x40
+#define BITMASK_BYTE25_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE26_UNKNOWN_1						0x01
+#define BITMASK_BYTE26_UNKNOWN_2						0x02
+#define BITMASK_BYTE26_UNKNOWN_3						0x04
+#define BITMASK_BYTE26_UNKNOWN_4						0x08
+#define BITMASK_BYTE26_UNKNOWN_5						0x10
+#define BITMASK_BYTE26_UNKNOWN_6						0x20
+#define BITMASK_BYTE26_UNKNOWN_7						0x40
+#define BITMASK_BYTE26_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE27_UNKNOWN_1						0x01
+#define BITMASK_BYTE27_UNKNOWN_2						0x02
+#define BITMASK_BYTE27_UNKNOWN_3						0x04
+#define BITMASK_BYTE27_UNKNOWN_4						0x08
+#define BITMASK_BYTE27_UNKNOWN_5						0x10
+#define BITMASK_BYTE27_UNKNOWN_6						0x20
+#define BITMASK_BYTE27_UNKNOWN_7						0x40
+#define BITMASK_BYTE27_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE28_UNKNOWN_1						0x01
+#define BITMASK_BYTE28_UNKNOWN_2						0x02
+#define BITMASK_BYTE28_UNKNOWN_3						0x04
+#define BITMASK_BYTE28_UNKNOWN_4						0x08
+#define BITMASK_BYTE28_UNKNOWN_5						0x10
+#define BITMASK_BYTE28_UNKNOWN_6						0x20
+#define BITMASK_BYTE28_UNKNOWN_7						0x40
+#define BITMASK_BYTE28_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE29_UNKNOWN_1						0x01
+#define BITMASK_BYTE29_UNKNOWN_2						0x02
+#define BITMASK_BYTE29_UNKNOWN_3						0x04
+#define BITMASK_BYTE29_UNKNOWN_4						0x08
+#define BITMASK_BYTE29_UNKNOWN_5						0x10
+#define BITMASK_BYTE29_UNKNOWN_6						0x20
+#define BITMASK_BYTE29_UNKNOWN_7						0x40
+#define BITMASK_BYTE29_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE30_UNKNOWN_1						0x01
+#define BITMASK_BYTE30_UNKNOWN_2						0x02
+#define BITMASK_BYTE30_UNKNOWN_3						0x04
+#define BITMASK_BYTE30_UNKNOWN_4						0x08
+#define BITMASK_BYTE30_UNKNOWN_5						0x10
+#define BITMASK_BYTE30_UNKNOWN_6						0x20
+#define BITMASK_BYTE30_UNKNOWN_7						0x40
+#define BITMASK_BYTE30_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE31_UNKNOWN_1						0x01
+#define BITMASK_BYTE31_UNKNOWN_2						0x02
+#define BITMASK_BYTE31_UNKNOWN_3						0x04
+#define BITMASK_BYTE31_UNKNOWN_4						0x08
+#define BITMASK_THROTTLE_MOTOR_VOLTAGE					0x10
+#define BITMASK_THROTTLE_MOTOR_DUTY						0x20
+#define BITMASK_BYTE31_UNKNOWN_5						0x40
+#define BITMASK_BYTE31_UNKNOWN_6						0x80
+
+#define BITMASK_BYTE32_UNKNOWN_1						0x01
+#define BITMASK_BYTE32_UNKNOWN_2						0x02
+#define BITMASK_BYTE32_UNKNOWN_3						0x04
+#define BITMASK_BYTE32_UNKNOWN_4						0x08
+#define BITMASK_BYTE32_UNKNOWN_5						0x10
+#define BITMASK_BYTE32_UNKNOWN_6						0x20
+#define BITMASK_BYTE32_UNKNOWN_7						0x40
+#define BITMASK_BYTE32_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE33_UNKNOWN_1						0x01
+#define BITMASK_EXHAUST_GAS_TEMPERATURE					0x02
+#define BITMASK_FUEL_PRESSURE_HIGH						0x04
+#define BITMASK_BRAKE_BOOSTER_PRESSURE					0x08
+#define BITMASK_MAIN_ACCELERATOR_SENSOR					0x10
+#define BITMASK_SUB_ACCELERATOR_SENSOR					0x20
+#define BITMASK_MAIN_THROTTLE_SENSOR					0x40
+#define BITMASK_SUB_THROTTLE_SENSOR						0x80
+
+#define BITMASK_BYTE34_UNKNOWN_1						0x01
+#define BITMASK_BYTE34_UNKNOWN_2						0x02
+#define BITMASK_BYTE34_UNKNOWN_3						0x04
+#define BITMASK_BYTE34_UNKNOWN_4						0x08
+#define BITMASK_BYTE34_UNKNOWN_5						0x10
+#define BITMASK_MEMORIZED_CRUISE_SPEED					0x20
+#define BITMASK_SCV_STEP								0x40
+#define BITMASK_COLD_START_INJECTOR						0x80
+
+#define BITMASK_BYTE35_UNKNOWN_1						0x01
+#define BITMASK_BYTE35_UNKNOWN_2						0x02
+#define BITMASK_BYTE35_UNKNOWN_3						0x04
+#define BITMASK_BYTE35_UNKNOWN_4						0x08
+#define BITMASK_BYTE35_UNKNOWN_5						0x10
+#define BITMASK_BYTE35_UNKNOWN_6						0x20
+#define BITMASK_BYTE35_UNKNOWN_7						0x40
+#define BITMASK_BYTE35_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE36_UNKNOWN_1						0x01
+#define BITMASK_BYTE36_UNKNOWN_2						0x02
+#define BITMASK_EXHAUST_OCV_CURRENT_LEFT				0x04
+#define BITMASK_EXHAUST_OCV_CURRENT_RIGHT				0x08
+#define BITMASK_EXHAUST_OCV_DUTY_LEFT					0x10
+#define BITMASK_EXHAUST_OCV_DUTY_RIGHT					0x20
+#define BITMASK_EXHAUST_VVT_ADVANCE_ANGLE_RIGHT			0x40
+#define BITMASK_EXHAUST_VVT_ADVANCE_ANGLE_LEFT			0x80
+
+#define BITMASK_BYTE37_UNKNOWN_1						0x01
+#define BITMASK_BYTE37_UNKNOWN_2						0x02
+#define BITMASK_BYTE37_UNKNOWN_3						0x04
+#define BITMASK_BYTE37_UNKNOWN_4						0x08
+#define BITMASK_BYTE37_UNKNOWN_5						0x10
+#define BITMASK_BYTE37_UNKNOWN_6						0x20
+#define BITMASK_ETC_MOTOR_RELAY							0x40
+#define BITMASK_BYTE37_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE38_UNKNOWN_1						0x01
+#define BITMASK_ACCELERATOR_SWITCH						0x02
+#define BITMASK_BYTE38_UNKNOWN_3						0x04
+#define BITMASK_BRAKE_SWITCH							0x08
+#define BITMASK_RESUME_ACCELERATE_SWITCH				0x10
+#define BITMASK_SET_COAST_SWITCH						0x20
+#define BITMASK_STOP_LIGHT_SWITCH						0x40
+#define BITMASK_CLUTCH_SWITCH							0x80
+
+#define BITMASK_BYTE39_UNKNOWN_1						0x01
+#define BITMASK_BYTE39_UNKNOWN_2						0x02
+#define BITMASK_BYTE39_UNKNOWN_3						0x04
+#define BITMASK_BYTE39_UNKNOWN_4						0x08
+#define BITMASK_BYTE39_UNKNOWN_5						0x10
+#define BITMASK_BYTE39_UNKNOWN_6						0x20
+#define BITMASK_BYTE39_UNKNOWN_7						0x40
+#define BITMASK_BYTE39_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE40_UNKNOWN_1						0x01
+#define BITMASK_BYTE40_UNKNOWN_2						0x02
+#define BITMASK_BYTE40_UNKNOWN_3						0x04
+#define BITMASK_BYTE40_UNKNOWN_4						0x08
+#define BITMASK_BYTE40_UNKNOWN_5						0x10
+#define BITMASK_BYTE40_UNKNOWN_6						0x20
+#define BITMASK_BYTE40_UNKNOWN_7						0x40
+#define BITMASK_BYTE40_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE41_UNKNOWN_1						0x01
+#define BITMASK_BYTE41_UNKNOWN_2						0x02
+#define BITMASK_BYTE41_UNKNOWN_3						0x04
+#define BITMASK_BYTE41_UNKNOWN_4						0x08
+#define BITMASK_BYTE41_UNKNOWN_5						0x10
+#define BITMASK_BYTE41_UNKNOWN_6						0x20
+#define BITMASK_BYTE41_UNKNOWN_7						0x40
+#define BITMASK_BYTE41_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE42_UNKNOWN_1						0x01
+#define BITMASK_BYTE42_UNKNOWN_2						0x02
+#define BITMASK_BYTE42_UNKNOWN_3						0x04
+#define BITMASK_BYTE42_UNKNOWN_4						0x08
+#define BITMASK_BYTE42_UNKNOWN_5						0x10
+#define BITMASK_BYTE42_UNKNOWN_6						0x20
+#define BITMASK_BYTE42_UNKNOWN_7						0x40
+#define BITMASK_BYTE42_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE43_UNKNOWN_1						0x01
+#define BITMASK_BYTE43_UNKNOWN_2						0x02
+#define BITMASK_BYTE43_UNKNOWN_3						0x04
+#define BITMASK_BYTE43_UNKNOWN_4						0x08
+#define BITMASK_BYTE43_UNKNOWN_5						0x10
+#define BITMASK_BYTE43_UNKNOWN_6						0x20
+#define BITMASK_BYTE43_UNKNOWN_7						0x40
+#define BITMASK_BYTE43_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE44_UNKNOWN_1						0x01
+#define BITMASK_BYTE44_UNKNOWN_2						0x02
+#define BITMASK_BYTE44_UNKNOWN_3						0x04
+#define BITMASK_BYTE44_UNKNOWN_4						0x08
+#define BITMASK_BYTE44_UNKNOWN_5						0x10
+#define BITMASK_BYTE44_UNKNOWN_6						0x20
+#define BITMASK_BYTE44_UNKNOWN_7						0x40
+#define BITMASK_BYTE44_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE45_UNKNOWN_1						0x01
+#define BITMASK_BYTE45_UNKNOWN_2						0x02
+#define BITMASK_BYTE45_UNKNOWN_3						0x04
+#define BITMASK_BYTE45_UNKNOWN_4						0x08
+#define BITMASK_BYTE45_UNKNOWN_5						0x10
+#define BITMASK_BYTE45_UNKNOWN_6						0x20
+#define BITMASK_BYTE45_UNKNOWN_7						0x40
+#define BITMASK_BYTE45_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE46_UNKNOWN_1						0x01
+#define BITMASK_BYTE46_UNKNOWN_2						0x02
+#define BITMASK_BYTE46_UNKNOWN_3						0x04
+#define BITMASK_BYTE46_UNKNOWN_4						0x08
+#define BITMASK_BYTE46_UNKNOWN_5						0x10
+#define BITMASK_BYTE46_UNKNOWN_6						0x20
+#define BITMASK_BYTE46_UNKNOWN_7						0x40
+#define BITMASK_BYTE46_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE47_UNKNOWN_1						0x01
+#define BITMASK_BYTE47_UNKNOWN_2						0x02
+#define BITMASK_BYTE47_UNKNOWN_3						0x04
+#define BITMASK_BYTE47_UNKNOWN_4						0x08
+#define BITMASK_BYTE47_UNKNOWN_5						0x10
+#define BITMASK_BYTE47_UNKNOWN_6						0x20
+#define BITMASK_BYTE47_UNKNOWN_7						0x40
+#define BITMASK_BYTE47_UNKNOWN_8						0x80
+
+#define BITMASK_BYTE48_UNKNOWN_1						0x01
+#define BITMASK_BYTE48_UNKNOWN_2						0x02
+#define BITMASK_BYTE48_UNKNOWN_3						0x04
+#define BITMASK_BYTE48_UNKNOWN_4						0x08
+#define BITMASK_ROUGHNESS_MONITOR_CYLINDER_4			0x10
+#define BITMASK_ROUGHNESS_MONITOR_CYLINDER_3			0x20
+#define BITMASK_ROUGHNESS_MONITOR_CYLINDER_2			0x40
+#define BITMASK_ROUGHNESS_MONITOR_CYLINDER_1			0x80
+
+/*/
+	ADDRESS DEFINITIONS
+/*/
+#define ADDRESS_ENGINE_LOAD								0x00000007
+#define ADDRESS_COOLANT_TEMPERATURE						0x00000008
+#define ADDRESS_AIR_FUEL_CORRECTION_1					0x00000009
+#define ADDRESS_AIR_FUEL_LEARNING_1						0x0000000A
+#define ADDRESS_AIR_FUEL_CORRECTION_2					0x0000000B
+#define ADDRESS_AIR_FUEL_LEARNING_2						0x0000000C
+#define ADDRESS_MANIFOLD_ABSOLUTE_PRESSURE				0x0000000D
+#define ADDRESS_ENGINE_SPEED_LOW						0x0000000E
+#define ADDRESS_ENGINE_SPEED_HIGH						0x0000000F
+#define ADDRESS_VEHICLE_SPEED							0x00000010
+#define ADDRESS_IGNITION_TIMING							0x00000011
+#define ADDRESS_INTAKE_AIR_TEMPERATURE					0x00000012
+#define ADDRESS_MASS_AIR_FLOW_LOW						0x00000013
+#define ADDRESS_MASS_AIR_FLOW_HIGH						0x00000014
+#define ADDRESS_THROTTLE_OPENING_ANGLE					0x00000015
+#define ADDRESS_FRONT_O2_SENSOR_1_HIGH					0x00000016
+#define ADDRESS_FRONT_O2_SENSOR_1_LOW					0x00000017
+#define ADDRESS_REAR_O2_SENSOR_LOW						0x00000018
+#define ADDRESS_REAR_O2_SENSOR_HIGH						0x00000019
+#define ADDRESS_FRONT_O2_SENSOR_2_HIGH					0x0000001A
+#define ADDRESS_FRONT_O2_SENSOR_2_LOW					0x0000001B
+#define ADDRESS_BATTERY_VOLTAGE							0x0000001C
+#define ADDRESS_AIR_FLOW_SENSOR_VOLTAGE					0x0000001D
+#define ADDRESS_THROTTLE_SENSOR_VOLTAGE					0x0000001E
+#define ADDRESS_DIFFERENTIAL_PRESSURE_SENSOR_VOLTAGE	0x0000001F
+#define ADDRESS_FUEL_INJECTION_1_PULSE_WIDTH			0x00000020
+#define ADDRESS_FUEL_INJECTION_2_PULSE_WIDTH			0x00000021
+#define ADDRESS_KNOCK_CORRECTION						0x00000022
+#define ADDRESS_ATMOSPHERIC_PRESSURE					0x00000023
+#define ADDRESS_MANIFOLD_RELATIVE_PRESSURE				0x00000024
+#define ADDRESS_PRESSURE_DIFFERENTIAL_SENSOR			0x00000025
+#define ADDRESS_FUEL_TANK_PRESSURE						0x00000026
+#define ADDRESS_CO_ADJUSTMENT							0x00000027
+#define ADDRESS_LEARNED_IGNITION_TIMING					0x00000028
+#define ADDRESS_ACCELERATOR_OPENING_ANGLE				0x00000029
+#define ADDRESS_FUEL_TEMPERATURE						0x0000002A
+#define ADDRESS_FRONT_O2_HEATER_1						0x0000002B
+#define ADDRESS_REAR_O2_HEATER_CURRENT					0x0000002C
+#define ADDRESS_FRONT_O2_HEATER_2						0x0000002D
+#define ADDRESS_FUEL_LEVEL								0x0000002E
+#define ADDRESS_PRIMARY_WASTEGATE_DUTY_CYCLE			0x00000030
+#define ADDRESS_SECONDARY_WASTEGATE_DUTY_CYCLE			0x00000031
+#define ADDRESS_CPC_VALVE_DUTY_RATIO					0x00000032
+#define ADDRESS_TUMBLE_VALVE_POSITION_SENSOR_RIGHT		0x00000033
+#define ADDRESS_TUMBLE_VALVE_POSITION_SENSOR_LEFT		0x00000034
+#define ADDRESS_IDLE_SPEED_CONTROL_VALVE_DUTY_RATIO		0x00000035
+#define ADDRESS_AIR_FUEL_LEAN_CORRECTION				0x00000036
+#define ADDRESS_AIR_FUEL_HEATER_DUTY					0x00000037
+#define ADDRESS_IDLE_SPEED_CONTROL_VALVE_STEP			0x00000038
+#define ADDRESS_NUMBER_OF_EXHAUST_GAS_RECIRC_STEPS		0x00000039
+#define ADDRESS_ALTERNATOR_DUTY							0x0000003A
+#define ADDRESS_FUEL_PUMP_DUTY							0x0000003B
+#define ADDRESS_INTAKE_VVT_ADVANCE_ANGLE_RIGHT			0x0000003C
+#define ADDRESS_INTAKE_VVT_ADVANCE_ANGLE_LEFT			0x0000003D
+#define ADDRESS_INTAKE_OCV_DUTY_RIGHT					0x0000003E
+#define ADDRESS_INTAKE_OCV_DUTY_LEFT					0x0000003F
+#define ADDRESS_INTAKE_OCV_CURRENT_RIGHT				0x00000040
+#define ADDRESS_INTAKE_OCV_CURRENT_LEFT					0x00000041
+#define ADDRESS_AIR_FUEL_SENSOR_1_CURRENT				0x00000042
+#define ADDRESS_AIR_FUEL_SENSOR_2_CURRENT				0x00000043
+#define ADDRESS_AIR_FUEL_SENSOR_1_RESISTANCE			0x00000044
+#define ADDRESS_AIR_FUEL_SENSOR_2_RESISTANCE			0x00000045
+#define ADDRESS_AIR_FUEL_SENSOR_1						0x00000046
+#define ADDRESS_AIR_FUEL_SENSOR_2						0x00000047
+#define ADDRESS_GEAR_POSITION							0x0000004A
+#define ADDRESS_AIR_FUEL_SENSOR_1_HEATER_CURRENT		0x00000053
+#define ADDRESS_AIR_FUEL_SENSOR_2_HEATER_CURRENT		0x00000054
+#define ADDRESS_IGNITION_RETARD							0x0000006F
+#define ADDRESS_IDLE_ADJUST								0x00000070
+#define ADDRESS_IDLE_ADJUST_AIRCON						0x00000071
+#define ADDRESS_AIR_FUEL_CORRECTION_3					0x000000D0
+#define ADDRESS_AIR_FUEL_LEARNING_3						0x000000D1
+#define ADDRESS_REAR_O2_HEATER_VOLTAGE					0x000000D2
+#define ADDRESS_AIR_FUEL_ADJUSTMENT_VOLTAGE				0x000000D3
+#define ADDRESS_ROUGHNESS_MONITOR_CYLINDER_3			0x000000D8
+#define ADDRESS_ROUGHNESS_MONITOR_CYLINDER_4			0x000000D9
+#define ADDRESS_THROTTLE_MOTOR_DUTY						0x000000FA
+#define ADDRESS_THROTTLE_MOTOR_VOLTAGE					0x000000FB
+#define ADDRESS_SUB_THROTTLE_SENSOR						0x00000100
+#define ADDRESS_MAIN_THROTTLE_SENSOR					0x00000101
+#define ADDRESS_SUB_ACCELERATOR_SENSOR					0x00000102
+#define ADDRESS_MAIN_ACCELERATOR_SENSOR					0x00000103
+#define ADDRESS_BRAKE_BOOSTER_PRESSURE					0x00000104
+#define ADDRESS_FUEL_PRESSURE_HIGH						0x00000105
+#define ADDRESS_EXHAUST_GAS_TEMPERATURE					0x00000106
+#define ADDRESS_COLD_START_INJECTOR						0x00000108
+#define ADDRESS_SCV_STEP								0x00000109
+#define ADDRESS_MEMORIZED_CRUISE_SPEED					0x0000010A
+#define ADDRESS_EXHAUST_VVT_ADVANCE_ANGLE_RIGHT			0x00000118
+#define ADDRESS_EXHAUST_VVT_ADVANCE_ANGLE_LEFT			0x00000119
+#define ADDRESS_EXHAUST_OCV_DUTY_RIGHT					0x0000011A
+#define ADDRESS_EXHAUST_OCV_DUTY_LEFT					0x0000011B
+#define ADDRESS_EXHAUST_OCV_CURRENT_RIGHT				0x0000011C
+#define ADDRESS_EXHAUST_OCV_CURRENT_LEFT				0x0000011D
+
+#define ADDRESS_SWITCH_x61								0x00000061
+#define ADDRESS_SWITCH_x62								0x00000062
+#define ADDRESS_SWITCH_x63								0x00000063
+#define ADDRESS_SWITCH_x64								0x00000064
+#define ADDRESS_SWITCH_x65								0x00000065
+#define ADDRESS_SWITCH_x66								0x00000066
+#define ADDRESS_SWITCH_x67								0x00000067
+#define ADDRESS_SWITCH_x68								0x00000068
+#define ADDRESS_SWITCH_x69								0x00000069
+#define ADDRESS_SWITCH_x120								0x00000120
+#define ADDRESS_SWITCH_x121								0x00000121
+
+#define AJ870_8840_ADDRESS_ENGINE_LOAD_CHARGE_AIR		0x000200D8
+#define AJ870_8840_ADDRESS_ADVANCE_MULTIPLIER			0x00020124
+
+#define SPECIAL_ADDRESS_ENGINE_SPEED					0x10000010
+#define SPECIAL_ADDRESS_REAR_O2_SENSOR					0x10000020
+#define SPECIAL_ADDRESS_MASS_AIR_FLOW					0x10000030
+#define SPECIAL_ADDRESS_FRONT_O2_SENSOR_1				0x10000040
+#define SPECIAL_ADDRESS_FRONT_O2_SENSOR_2				0x10000050
+
+********************************************************
+
+
+	lpFrameList = (frameList*)lpSplitter->GetView(idView_KnownTroubleCodesSubaru);
+	lpFrameList->AddColumn("Subaru Trouble Code",150);
+	lpFrameList->AddColumn("Subaru Trouble Code Description",300);
+	
+	idView_KnownTroubleCodesOBD = lpSplitter->AddView(1,0,RUNTIME_CLASS(frameList),NULL);
+	lpFrameList = (frameList*)lpSplitter->GetView(idView_KnownTroubleCodesOBD);
+	lpFrameList->AddColumn("OBD Trouble Code",150);
+	lpFrameList->AddColumn("OBD Trouble Code Description",300);
+
+*********************************************************
+
+lpFrameList = (frameList*)lpSplitter->GetView(idView_RealtimeDataViewSelection);
+	lpFrameList->AddColumn("Show",40);
+	lpFrameList->AddColumn("Data Item Name",100);
+	lpFrameList->AddColumn("Data Item Description",400);
+
+	idView_RealtimeDataViewGrid = lpSplitter->AddView(1,0,RUNTIME_CLASS(frameGrid),NULL);
+
+*********************************************************
+
+lpFrameList = (frameList*)lpSplitter->GetView(idView_TroubleCodeReaderCurrent);
+	lpFrameList->AddColumn("Current Trouble Code",150);
+	lpFrameList->AddColumn("Current Trouble Code Description",300);
+	
+	idView_TroubleCodeReaderHistoric = lpSplitter->AddView(1,0,RUNTIME_CLASS(frameList),NULL);
+	lpFrameList = (frameList*)lpSplitter->GetView(idView_TroubleCodeReaderHistoric);
+	lpFrameList->AddColumn("Historic Trouble Code",150);
+	lpFrameList->AddColumn("Historic Trouble Code Description",300);
+
+*********************************************************
+
+lpFrameList->AddColumn("Show",40);
+			lpFrameList->AddColumn("Data Item Name",100);
+			lpFrameList->AddColumn("Data Item Description",400);
+			
+			if(lpSplitter->AddView(1,0,RUNTIME_CLASS(frameGrid),NULL) != lpTree->GetItemData(hItem)+1)
+				OutputString("saved log file view id offset is more than 1",MESSAGETYPE_ERROR);
+
+			frameGrid* lpFrameGrid = (frameGrid*)lpSplitter->GetView(lpTree->GetItemData(hItem)+1);
+			lpFrameGrid->LoadLogFile(szLabel);
+
+*********************************************************
+
+long protocolSSM::GetAddressSingle()
+{
+	CString sError;
+	unsigned char* cBuffer = NULL;
+	unsigned short usBufferPointer = 0;
+	long lResult = 0;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if((cBuffer = (unsigned char*)malloc((size_t)MAXSIZE_MESSAGE)) == NULL)
+	{
+		sError.Format("Memory Error - GetAddressSingle [cBuffer] : %i [0x%X]",GetLastError());
+		OutputString(sError,TRUE);
+
+		return F_NO_MEMORY;
+	}
+
+EXCEPTION_BOOKMARK(__LINE__)
+	memset((void*)cBuffer,0,(size_t)MAXSIZE_MESSAGE);
+	usBufferPointer = 0;
+
+EXCEPTION_BOOKMARK(__LINE__)
+	// 80 10 F0 17 A8 00 00 00 0E 00 00 0F 00 00 10 00 00 15 00 00 0D 00 00 22 02 01 68 1B
+	cBuffer[0] = 0x80;
+	cBuffer[1] = 0x10;
+	cBuffer[2] = 0xF0;
+	cBuffer[3] = 0x05;
+	cBuffer[4] = 0xA8;
+	cBuffer[5] = 0x00;
+	cBuffer[6] = 0x00;
+	cBuffer[7] = 0x00;
+	cBuffer[8] = 0x10;
+	cBuffer[9] = GenerateChecksum(&cBuffer[0],9);
+//	cBuffer[10] = 0x00;
+//	cBuffer[11] = 0x0F;
+//	cBuffer[12] = 0x00;
+//	cBuffer[13] = 0x00;
+//	cBuffer[14] = 0x10;
+//	cBuffer[15] = 0x00;
+//	cBuffer[16] = 0x00;
+//	cBuffer[17] = 0x15;
+//	cBuffer[18] = 0x00;
+//	cBuffer[19] = 0x00;
+//	cBuffer[20] = 0x0D;
+//	cBuffer[21] = 0x00;
+//	cBuffer[22] = 0x00;
+//	cBuffer[23] = 0x22;
+//	cBuffer[24] = 0x02;
+//	cBuffer[25] = 0x01;
+//	cBuffer[26] = 0x68;
+//	cBuffer[27] = 0x1B;
+	usBufferPointer = 10;
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if((lResult = Write(cBuffer,usBufferPointer)) != usBufferPointer)
+	{
+		sError.Format("[GetAddressSingle] write [%i] returned less than buffer length [%i]",lResult,usBufferPointer);
+		OutputString(sError,MESSAGETYPE_WARNING);
+		return F_COMMS_ERROR;
+	}
+	else
+		OutputString("to ECU : GetAddressSingle");
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if(cBuffer != NULL)
+		free(cBuffer);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	ReleaseSemaphore(semaphoreRead,1,NULL);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	switch(WaitForSingleObject(semaphoreWrite,5000))
+	{
+	case WAIT_ABANDONED:
+	case WAIT_TIMEOUT:
+		sError.Format("Response Timeout - GetAddressSingle");
+		OutputString(sError,MESSAGETYPE_ERROR);
+		return F_MUTEX_TIMEOUT;
+	}
+
+	OutputString("semaphoreWrite returned...");
+
+CATCHCATCH("protocolSSM::GetAddressSingle()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+long protocolSSM::ProcessMessage(LPSTRUCT_MSG_SSM_GETADDRESSSINGLE lpMessage,unsigned short usMessageLength)
+{
+	CString sError;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if(lpMessage == NULL)
+		return F_NULL_POINTER;
+
+CATCHCATCH("protocolSSM::ProcessMessage(LPSTRUCT_MSG_SSM_GETADDRESSSINGLE)");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+		return F_EXCEPTION;
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return ERR_SUCCESS;
+}
+
+***********************************************************
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if((hParent = GetNode(NULL,NODE_ROMIMAGEPARENT)) != NULL)
+	{
+EXCEPTION_BOOKMARK(__LINE__)
+		if((hItem = lpTree->InsertItem(szLabel,0,0,hParent)) != NULL)
+		{
+EXCEPTION_BOOKMARK(__LINE__)
+
+EXCEPTION_BOOKMARK(__LINE__)
+			lpTree->Expand(hParent,TVE_EXPAND);
+			lpTree->RedrawWindow();
+
+			sError.Format("resource tree item added - %s...",szLabel);
+			OutputString(sError);
+		}
+	}
+
+**************************************************************
+
+#include "dialogEcuFlash.h"
+#include "definitionError.h"
+#include "handlerError.h"
+#include "ecutools.h"
+#include "log.h"
+#include "ecuExplorer.h"
+
+extern void	nuke();
+extern void	OutputString(CString sMessage,unsigned short usMessageType = 0);
+
+BEGIN_MESSAGE_MAP(dialogEcuFlash, CDialog)
+	ON_BN_CLICKED(ID_ECUFLASH_START,OnStart)
+	ON_BN_CLICKED(ID_ECUFLASH_FILESELECT,OnBrowse)
+	ON_BN_CLICKED(ID_ECUFLASH_FLASHDETAILS,OnDetails)
+END_MESSAGE_MAP()
+
+dialogEcuFlash::dialogEcuFlash() : CDialog(dialogEcuFlash::IDD)
+{
+	lpParent = NULL;
+	sBrowse = "No File Selected...";
+	b0x4D = b0x81 = FALSE;
+	bDownload = bCompare = bTest = bFlash = FALSE;
+}
+
+BOOL dialogEcuFlash::OnInitDialog()
+{
+	BOOL bResult = CDialog::OnInitDialog();
+
+	if(lpParent == NULL)
+		return FALSE;
+
+	((ecuExplorer*)lpParent)->lpProtocolSSM->Stop();
+	return bResult;
+}
+
+void dialogEcuFlash::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+
+	DDX_Text(pDX,IDC_ECUFLASH_FILEDETAILS,sBrowse);
+
+	DDX_Check(pDX,IDC_ECUFLASH_RADIO_0X4D,b0x4D);
+	DDX_Check(pDX,IDC_ECUFLASH_RADIO_0X81,b0x81);
+
+	DDX_Check(pDX,IDC_ECUFLASH_RADIO_DOWNLOAD,bDownload);
+	DDX_Check(pDX,IDC_ECUFLASH_RADIO_COMPARE,bCompare);
+	DDX_Check(pDX,IDC_ECUFLASH_RADIO_TEST,bTest);
+	DDX_Check(pDX,IDC_ECUFLASH_RADIO_UPLOAD,bFlash);
+}
+
+void dialogEcuFlash::OnCancel()
+{
+	if(!(((ecuExplorer*)lpParent)->ulConfig & CONFIG_SHOWDEBUGCONSOLE))
+		FreeConsole();
+
+	CDialog::OnCancel();
+}
+
+void dialogEcuFlash::OnStart()
+{
+	CString sError;
+	log l;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	UpdateData();
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if(!b0x4D && !b0x81)
+	{
+		MessageBox("You must first select a flash protocol","Select Flash Protocol",MB_ICONINFORMATION + MB_OK);
+		return;
+	}
+	if(!bDownload && !bCompare && !bTest && !bFlash)
+	{
+		MessageBox("You must first select a command set","Select Command Set",MB_ICONINFORMATION + MB_OK);
+		return;
+	}
+	if(sBrowse.GetLength() == 0 || sBrowse == "No File Selected...")
+	{
+		MessageBox("You must first select a binary file","Select File",MB_ICONINFORMATION + MB_OK);
+		return;
+	}
+
+EXCEPTION_BOOKMARK(__LINE__)
+	MessageBox("You must do the following:\n1) Connect the green test mode connector under the dash\n2) Connect the white flash block\n3) Turn the ignition to the 'ON' position\n\nClick OK to Continue","Action Required",MB_ICONINFORMATION + MB_OKCANCEL);
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if(!(((ecuExplorer*)lpParent)->ulConfig & CONFIG_SHOWDEBUGCONSOLE))
+	{
+		AllocConsole();
+		SetConsoleTitle("TARI Racing Software - ecuFlash Log");
+		freopen("CONOUT$","r+",stdout);
+	}
+
+EXCEPTION_BOOKMARK(__LINE__)
+	l.set_filename("ecuFlash Log.txt");
+	l.set_timestamp(false);
+	l.open();
+
+	if(lpParent == NULL)
+		return;
+
+	ecutools ecut((LPCTSTR)((ecuExplorer*)lpParent)->lpProtocolSSM->sCommPort);
+	ecut.addlog(&l);
+
+	if(b0x4D)
+		ecut.set_model(wrx2002);
+	else if(b0x81)
+		ecut.set_model(wrx2004);
+
+	string kernelfile;
+	if (kernelfile.empty())
+	{
+		if (!ecut.read_kernel_from_resource(IDR_BINARY1))
+			return;
+	}
+	else if (!ecut.read_kernel(kernelfile))
+		return;
+	l.print("kernel image loaded and verified.\n");
+
+	if(bCompare || bTest || bFlash)
+		if (!ecut.read_image((LPCTSTR)sBrowse))
+			return;
+
+	if (!ecut.ready_port())
+	{
+		printf("unable to connect to port.\n");
+		return;
+	}
+
+	if(bDownload)
+		ecut.dump_all_memory_to_file((LPCTSTR)sBrowse);
+	else if(bCompare)
+		ecut.compare_image();
+	else if(bTest)
+		ecut.flash_image(false);
+	else if(bFlash)
+		ecut.flash_image(true);
+
+	ecut.close_port();
+	l.close();
+
+CATCHCATCH("dialogEcuFlash::OnStart()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+	{}
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return;
+}
+
+void dialogEcuFlash::OnBrowse()
+{
+	CString sError;
+
+TRYTRY
+
+EXCEPTION_BOOKMARK(__LINE__)
+	UpdateData();
+
+EXCEPTION_BOOKMARK(__LINE__)
+	if(bDownload)
+		if(BrowseForFile(&sBrowse,OFN_OVERWRITEPROMPT) == FALSE)
+			return;
+	else if(bCompare || bTest || bFlash)
+		if(BrowseForFile(&sBrowse,OFN_FILEMUSTEXIST) == FALSE)
+			return;
+
+EXCEPTION_BOOKMARK(__LINE__)
+	UpdateData(FALSE);
+
+CATCHCATCH("dialogEcuFlash::OnBrowse()");
+
+	if(bExceptionFlag == EXEPT_CONTINUE)
+	{}
+	if(bExceptionFlag == EXEPT_ABORT)
+		nuke();
+
+	return;
+}
+
+void dialogEcuFlash::OnDetails()
+{}
+
+long dialogEcuFlash::BrowseForFile(CString* szReturn,DWORD dwFlags)
+{
+	TCHAR szTitle[255];
+	TCHAR szDefExt[255];
+	TCHAR szFile[255] = "\0";
+	OPENFILENAME ofnFileName;
+
+	strcpy(szFile,"");
+	strcpy(szTitle,"Select a file");
+	strcpy(szDefExt,"");
+
+	memset((void *)&ofnFileName,0,sizeof(OPENFILENAME));
+	ofnFileName.lStructSize = sizeof(OPENFILENAME);
+	ofnFileName.hwndOwner = m_hWnd;
+	ofnFileName.hInstance = NULL;
+	ofnFileName.lpstrFilter = "All Files (*.*)\0*.*\0\0";
+	ofnFileName.lpstrCustomFilter = NULL;
+	ofnFileName.nMaxCustFilter = 0;
+	ofnFileName.nFilterIndex = 1;
+	ofnFileName.lpstrFile = szFile;
+	ofnFileName.nMaxFile = sizeof(szFile);
+	ofnFileName.lpstrFileTitle = NULL;
+	ofnFileName.nMaxFileTitle = 0;
+	ofnFileName.lpstrInitialDir = NULL;
+	ofnFileName.lpstrTitle = (LPSTR)&szTitle;
+	ofnFileName.nFileOffset = 0;
+	ofnFileName.nFileExtension = 0;
+	ofnFileName.lpstrDefExt = (LPSTR)&szDefExt;
+	ofnFileName.lCustData = NULL;
+	ofnFileName.lpfnHook = NULL;
+	ofnFileName.lpTemplateName = NULL;
+	ofnFileName.Flags = OFN_SHOWHELP | OFN_EXPLORER | OFN_HIDEREADONLY | dwFlags;
+
+	if(dwFlags & OFN_OVERWRITEPROMPT)
+	{
+		if(GetSaveFileName(&ofnFileName) != 0)
+			*szReturn = ofnFileName.lpstrFile;
+		else
+			return FALSE;
+	}
+	else
+	{
+		if(GetOpenFileName(&ofnFileName) != 0)
+			*szReturn = ofnFileName.lpstrFile;
+		else
+			return FALSE;
+	}
+
+	return TRUE;
+}
+
+*******************************************************************8

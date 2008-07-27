@@ -1,0 +1,487 @@
+### To-Do List ####
+- road dyno
+- innovate motorsports LM-1 protocol
+- resource tree context menu
+- base table editing
+- realtime table editing
+- ram read, store, and write after ecuFlash tools
+- table editor context menu
+- overlay data log to tables
+- disable data item add/remove when file capture active
+- data item profiles
+
+:: NEXT RELEASE ::
+- (BUG FIX) view dies after ecuQuery/ecuFlash
+- (BUG FIX) MY00 2.5RS dtc fix, treat as >MY00 (get INIT response first)
+- (BUG FIX) invalid dtc response codes (look on forum)
+- (FEATURE REQUEST) wideband integration
+- (FEATURE REQUEST) data item priority
+- (FEATURE REQUEST) mark capture log file
+
+### External Sensor Input Dll ###
+functions:
+- providerInitialize
+- providerStart
+- providerStop
+- providerGetData
+
+### Build History ###
+
+2005.06.16
+* started development
+
+2005.06.18
+* got previous instance detection working properly
+* got window name to display
+* sorted registry initialization and read
+* sorted menu initialization
+* added about message box
+* sorted menu selection and registry storage
+
+2005.06.19
+* added message box for settings changes
+* defined bitmask structure
+* added startup commentary
+
+2005.06.21
+* got DataItemMap menu open/enum working correctly
+* started coding default data item map registry entries
+
+2005.06.22
+* coded more default data item map registry entries
+
+2005.06.23
+* finished coding default data item map registry entries
+* had to break the default entries into groups of 10 otherwise compiler fails with error C1002 - too many symbols
+* implemented log/rom file opening dialog boxes
+
+2005.06.24
+* implemented frameDataItem
+* got the data items loaded into frame window
+* refined window sizing
+* implemented edit control on frameMain
+* got edit control font style sorted
+
+2005.06.27
+* implemented frameCommSerial
+* got serial port enumeration working
+
+2005.06.28
+* removed resizing ability from frameMain, frameCommSerial
+* got list box font style sorted
+* got comm port selection sorted
+* started development of the protocolSSM class
+
+2005.06.29
+* protocolSSM class
+
+2005.06.30
+* improved com port detection and startup messaging
+* implemented QueryECUType into protocolSSM class
+* implemented startup thread
+* refined comms startup validation
+
+2005.07.01
+* sorted menu enable/delete based on user level
+* reduced font size in frameMain
+* reduced font size in frameCommSerial
+
+2005.07.05
+* did live testing of comms routines
+* corrected read routine to read and return number of bytes read
+* added fragmentation correction loop with protection
+* added buffer dump functionality
+
+2005.07.09
+* implemented label data file format
+
+2005.07.10
+* finished label data file implementation
+* started change of live data item storage from registry to data file format
+* streamlined comms timing
+
+2005.07.28
+* started development of new look GUI
+* implemented resource tree
+* implemented comm serial view into splitter window
+
+2005.07.30
+* implemented AW_CMultiViewSplitter
+* added views for tree items
+
+2005.07.31
+* implemented CGridCtrl
+* added views for tree items
+
+2005.08.01
+* implemented log file frames
+
+2005.08.07
+* fixed release version bug
+
+2005.08.09
+* implemented known data item viewer
+
+2005.08.10
+* implemented threadStartup
+* modified ecu query message return routine
+
+2005.08.12
+* implemented column header-click sorting
+
+2005.08.20
+* changed live data viewer to a CListCtrl
+* removed ROM image viewer
+
+2005.08.25
+* implemented ECU reset functionality
+
+2005.08.27
+* implemented ignition retard timing functionality
+
+2005.08.28
+* tested 'ECU reset' functionality
+* tested and corrected 'ignition retard' functionality
+
+2005.09.01
+* tested and configured 'set idle speed' functionality
+* implemented label recognition on startup
+
+2005.09.02
+* implemented selectable column display for log file frame
+* implemented support bitmap parsing on startup
+
+2005.09.03
+* implemented list item display based on support list bitmap
+
+2005.09.05
+* changed realtime data list to seperate analogue and digital lists
+
+2005.09.06
+* implemented unit text into data list creation
+* implemented context menu for realtime frame
+
+2005.09.08
+* sorted context menu enabled/disable processing
+* implemented 'choose logging directory' menu option
+* implemented context menu check-marks
+* implemented configuration storage/retrieval
+* implemented 'select all' menu commands
+
+2005.09.09
+* implemented data item text change on 'convert ...' menu option
+* implemented data item selection on startup
+* moved active/inactive storage of user-defined data items to registry
+* implemented active/inactive context menu
+
+2005.09.10
+* defined live query stucture
+* implemented live addition/removal of query items
+* implemented live query request processes
+
+2005.09.11
+* implemented live query response processing
+* implemented float processing
+* implemented data list updating
+* implemented min/max clearing on convert menu option
+
+2005.09.12
+* implemented live query item addition/removal without neccessary display
+* implemented add/remove of activated/deactivated data items
+* implemented live query pause processes
+* implemented min/max value reset ability
+* implemented variable decimal placement, based on .dat file content
+
+2005.09.13
+* changed versioning to 1.0.38
+
+2005.09.16 (1.0.39)
+* implemented injector conversion to duty %
+* added float storage item to live bit item
+
+2005.09.22 (1.0.40)
+* implemented config settings during startup
+
+2005.09.23 (1.0.41)
+* implemented new add/remove query item methods
+
+2005.09.24 (1.0.42)
+* implemented csv file capture
+
+2005.09.25 (1.0.43)
+* added log file start/stop on defogger switch input
+* added trigger to automatically add new log files to saved log list
+* added more configuration definitions and removed some boolean storage
+* corrected live query item removal routine
+* added sample rate indicator to realtime data view node
+
+2005.09.26 (1.0.44)
+* log file frame was displaying null characters and extra column on certain input file formats (fixed)
+* corrected log file time
+* changed sample rate indicator to only display if CSV list is populated
+* added window state persist
+* added splitter size persist (lpMainFrame)
+
+2005.09.27 (1.0.45)
+* added splitter size persist (frameTroubleCodes)
+* added splitter size persist (frameDTCReader)
+* added splitter size persist (frameRealtime)
+* corrected OnUpdateCSVList windows message function
+
+2005.09.29 (1.0.46)
+* changed live data file storage
+* modified OnUpdateListItem to trigger csv file capture when defogger switch is not checked
+
+2005.09.30 (1.0.47)
+* enabled csv log file trigger without defogger data item selected
+
+2005.10.01 (1.0.48)
+* added 'Confirm ECU Remap' functionality
+* added SEMAPHORE_TIMEOUT definition
+* added semaphore capture to AddLiveQueryItem/RemoveLiveQueryItem
+
+2005.10.02 (1.0.49)
+* changed window splitter size storage to %
+* added list item update in OnItemChanged
+
+2005.10.03 (1.0.50)
+* fixed realtime frame inactivity issue when auto adding new log files
+* added view item description
+
+2005.10.04 (1.0.51)
+* corrected semaphore usage for AddLiveQueryItem/RemoveLiveQueryItem
+* added code to clear selected list on context menu - opposite data item list
+
+2005.10.06 (1.0.52)
+* corrected ReadAddressSingle/LiveQueryResponse process switch
+
+2005.10.07 (1.0.53)
+* changed defog switch processing to accomodate new live data item name
+* moved protocol trace file write
+
+2005.10.08 (1.0.54)
+* changed ignition adjust to allow for +5 and -5 adjustment.
+* changed ignition timing menu text.
+
+2005.10.09 (1.0.55)
+* changed 'known data item' list to 'user-defined data item' list.
+* corrected ignition adjust
+* correct trace file capture
+
+2005.10.13 (1.0.56)
+* changed active/inactive menu processing to check for ECU connectivity before adding to data item list
+* disabled Trouble Code Reader view
+* added live thread cleanup on shutdown
+
+2005.10.18 (1.0.57)
+* modified multiple instance window check string.
+
+2005.10.19 (1.0.58)
+* added debug log to record debug console trace
+* modified analogue min/max comparison
+* added 'Query Current Value' to ignition/idle speed adjust menu
+* added protocolSSM::QueryIgnitionTiming
+* added protocolSSM::QueryIdleSpeed
+
+2005.10.20 (1.0.59)
+* added extra error codes
+* added instance checking using event semaphore (as per colby boles sample code)
+
+2005.10.21 (1.0.60)
+* changed commSerial _DCB settings to those of ecuflash
+
+2005.10.24 (1.0.61)
+* changed analogue min/max value check routine
+* added resizing of splitter on window resize
+
+2005.10.25 (1.0.62)
+* changed exit menu function call
+* added frameMain::OnDestroy for splitter resize capture
+
+2005.10.26 (1.0.63)
+* added 'Use Absolute Time in File Capture' menu option
+
+2005.10.28 (1.0.64)
+* added 0xFF???? range of advance multiplier
+* modified LiveQuery to query 4 consecutive addresses for data item with high byte as 0xFFFFFFFF
+
+2005.10.28 (1.0.65)
+* commented out code to return if buffer send size is less than return size (test release)
+
+2005.10.29 (1.0.66)
+* increased semaphore timeout to 2500ms
+
+2005.10.30 (1.0.67)
+* exposed commSerial::Purge (if timeout on comm send then current buffer is purged)
+
+2005.10.31 (1.0.68)
+* changed comm port creation function to use exclusive access
+* changed 'ReadIntervalTimeout' to MAXDWORD
+
+2005.11.02 (1.0.69)
+* changed comm port DCB/COMMTIMEOUT parameters to match DL1
+
+2005.11.02 (1.0.70)
+* added IDR_POPUP_COMM context menu
+
+2005.11.04 (1.0.71)
+* reverted back to _DCB and COMMTIMEOUT values of ecuflash
+* implemented send of missing bytes during send where bytes written are less than requested
+* removed IDR_POPUP_COMM context menu
+* set focus to resource tree on startup
+
+2005.11.06 (1.0.72)
+* started implementation of ecuFlash
+* added dialogEcuFlash
+
+2005.11.08 (1.0.73)
+* added dialogCOMM
+
+2005.11.09 (1.0.74)
+* completed implementation of dialogCOMM
+
+2005.11.17 (1.0.75)
+* started the map editing implemention
+
+2005.11.22 (1.0.76)
+* removed 'Compare ROM Image' menu function
+* removed 'Confirm ECU Remap' menu function
+* removed dialogEcuFlash
+* added individual flash menu functions
+* added ecuFlash menu options
+* added dialogEcuFlash (just progress window)
+
+2005.11.28 (1.0.77)
+* modified CSV file logging to display path and filename in window text when capturing
+* added current logging path to dialog box for choosing logging path.
+* added extra thread for flashing and use of dialog
+
+2005.11.30 (1.0.78)
+* implemented new dtc label file format
+
+2005.12.02 (1.0.79)
+* added DTC query routines (ecuExplorer.cpp)
+* added DTC query routines (protocolSSM.cpp)
+* added DTC query routines (frameDTCReader.cpp)
+
+2005.12.03 (2.0.1)
+* changed versioning to v2.x.x
+
+2005.12.06 (2.0.2)
+* changed TRACE output to OutputString for LoadDataFile_xxxx routines
+* changed dtc query address range based on ECU label
+
+2005.12.07 (>> 3.0.4)
+* completed implementation of ecuflash
+* changed ecuflash::log to work with dialogEcuFlash for output
+* removed user level configuration - all users get all functionality
+
+2005.12.08 (>> 3.0.5)
+* changed dialogEcuFlash CEdit font to Lucida Console
+* verified read ROM memory
+* verified compare ROM image to ROM memory
+* verified test write ROM image to ROM memory
+
+2005.12.09 (3.0.6)
+* changed versioning to v3.x.x
+* added code to delete 'Open ROM File' menu item on startup
+* added disclaimer to ecuFlash tools
+* extended dialogEcuFlash dialog width
+
+2005.12.09 (3.0.7)
+* changed rom table structure
+* implemented rom data file load
+* implemented rom data resource tree build
+
+2005.12.11 (3.0.8)
+* added frameRomTable
+
+2005.12.12 (3.0.9)
+* added rom raw format check (ecuFlash/rom edit)
+* implemented map data read functionality
+* added map build support to frameGrid
+
+2005.12.13 (3.0.10)
+* added support string check to dtc query thread.
+* added storage of startup directory during InitInstance
+* added dtc query thread pause routines
+* added startup thread control routines
+* added ecu parent node selection after ecuFlash tool use
+
+2005.12.14 (3.0.11)
+* cleared sSupported and sECU variables on ecuFlash
+* disabled diagnostics functions on ecuFlash
+* added message box to re-enable diagnostics functions after ecuFlash
+* added 'action aborted' output messaging to ecuFlash
+
+2005.12.22 (3.0.12)
+* corrected dtc query processing routine (MY99/MY00)
+
+2005.12.27 (3.0.13)
+* corrected problem of missing , when using absolute time in capture file
+* remodelled the map/rom editing structures and .dat files
+
+2005.12.28 (3.0.14)
+* implemented LoadDataFile_map
+* implemented LoadDataFile_rom
+* implemented node data structures and use
+
+2006.01.17 (3.0.15)
+* implemented TYPE_CORRECTED_BOOST data item
+* removed dependency checking for required conversion items, moved conversion item add afterwards
+* modified OnUpdateListItem to process all items and use operands even if not being displayed.  this is required for conversion depedencies
+
+2006.01.18 (3.0.16)
+* redesigned frameCommSerial display frame
+* started Innovate Motorsports LM1 wideband sensor integration
+
+2006.01.19 (3.0.17)
+* LPSTRUCT_LIVEQUERYITEM now carries pointer to LPSTRUCT_LIVEBITITEM - speed
+* changed lpProtocolSSM::GetLiveQueryItem to lookup based on live bit item pointer - speed
+
+2006.01.20 (3.0.18)
+* added STabCtrl class
+
+2006.01.21 (3.0.19)
+* implemented STabCtrl class
+* modified STabCtrl class (ResizeControl)
+* implemented frameRomTables
+
+2006.01.22 (3.0.20)
+* modified frameTableEditor class
+* modified frameList to support callback functions
+* modified frameRealtime to register callback function
+* modified frameLogFile to register callback function
+* modified CSTabCtrl class to support views in tabs
+
+2006.01.24 (3.0.21)
+* implemented ecuQuery
+
+2006.01.25 (3.0.22)
+* discarded current ecuQuery implementation
+* used direct code from original ecuQuery application
+* corrected startup thread after ecuFlash/ecuQuery
+
+2006.01.26 (3.0.23)
+* corrected ecuQuery feedback on last line
+* corrected rear defogger switch processing - capture file start/stop
+
+2006.01.29 (3.0.24)
+* implemented support for OpenPort 1.2 hardware
+* corrected ecuQuery com port assignment
+* added further ecu definitions to label.dat (v1.0.10)
+* removed protocolLM1 class - due to be repackaged into external dll
+
+2006.02.01 (3.0.25)
+* corrected 'Manifold Relative Boost (Corrected)' item add, was adding atmospheric and absolute dependencies regardless of display state
+
+2006.02.02 (3.0.26)
+* added editor - label data file
+
+2006.02.03 (3.0.27)
+* started implementation of data item data file editor
+
+2006.02.05 (3.0.28)
+* adjusted data item view headers
+* disabled 'Close' button on ecuFlash dialog until process aborted/complete
+* continued implementation of data item data file editor

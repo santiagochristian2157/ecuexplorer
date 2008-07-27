@@ -1,0 +1,198 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: ecuExplorer - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating command line "rc.exe /l 0x409 /fo"Release/resources.res" /d "NDEBUG" /d "_AFXDLL" "C:\TARI Racing Software\products\ecuExplorer\resources.rc"" 
+Creating temporary file "C:\DOCUME~1\Calvin\LOCALS~1\Temp\RSP6.tmp" with contents
+[
+/nologo /MD /W3 /GX /O2 /I ".\general library" /D "NDEBUG" /D "WIN32" /D "_WINDOWS" /D "_MBCS" /D "_AFXDLL" /FR"Release/" /Fp"Release/ecuExplorer.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\TARI Racing Software\products\ecuExplorer\AW_CMultiViewSplitter.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\dialogCOMM.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\dialogEcuFlash.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\dialogEcuQuery.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\dialogEditor_dataitem.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\dialogEditor_label.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\ecuExplorer.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameCommSerial.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameDataItems.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameDTCReader.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameErrorLog.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameGrid.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameList.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameLogFile.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameMain.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameRealtime.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameResourceTree.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameTableEditor.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\frameTroubleCodes.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\GridCtrl.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\GridDropTarget.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\handlerError.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\InPlaceEdit.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\InPlaceList.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\STabCtrl.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\TitleTip.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\commSerial.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\protocolSSM.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\densocomm.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\densoecu.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\ecutools.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\error.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\log.cpp"
+"C:\TARI Racing Software\products\ecuExplorer\serial.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\Calvin\LOCALS~1\Temp\RSP6.tmp" 
+Creating temporary file "C:\DOCUME~1\Calvin\LOCALS~1\Temp\RSP7.tmp" with contents
+[
+Ws2_32.lib /nologo /subsystem:windows /incremental:no /pdb:"Release/ecuExplorer.pdb" /debug /machine:I386 /out:"Release/ecuExplorer.exe" 
+".\Release\AW_CMultiViewSplitter.obj"
+".\Release\dialogCOMM.obj"
+".\Release\dialogEcuFlash.obj"
+".\Release\dialogEcuQuery.obj"
+".\Release\dialogEditor_dataitem.obj"
+".\Release\dialogEditor_label.obj"
+".\Release\ecuExplorer.obj"
+".\Release\frameCommSerial.obj"
+".\Release\frameDataItems.obj"
+".\Release\frameDTCReader.obj"
+".\Release\frameErrorLog.obj"
+".\Release\frameGrid.obj"
+".\Release\frameList.obj"
+".\Release\frameLogFile.obj"
+".\Release\frameMain.obj"
+".\Release\frameRealtime.obj"
+".\Release\frameResourceTree.obj"
+".\Release\frameRomTables.obj"
+".\Release\frameTableEditor.obj"
+".\Release\frameTroubleCodes.obj"
+".\Release\GridCtrl.obj"
+".\Release\GridDropTarget.obj"
+".\Release\handlerError.obj"
+".\Release\InPlaceEdit.obj"
+".\Release\InPlaceList.obj"
+".\Release\STabCtrl.obj"
+".\Release\TitleTip.obj"
+".\Release\commSerial.obj"
+".\Release\protocolSSM.obj"
+".\Release\densocomm.obj"
+".\Release\densoecu.obj"
+".\Release\ecutools.obj"
+".\Release\error.obj"
+".\Release\log.obj"
+".\Release\serial.obj"
+".\Release\resources.res"
+]
+Creating command line "link.exe @C:\DOCUME~1\Calvin\LOCALS~1\Temp\RSP7.tmp"
+<h3>Output Window</h3>
+Compiling resources...
+Compiling...
+AW_CMultiViewSplitter.cpp
+dialogCOMM.cpp
+dialogEcuFlash.cpp
+dialogEcuQuery.cpp
+dialogEditor_dataitem.cpp
+dialogEditor_label.cpp
+ecuExplorer.cpp
+frameCommSerial.cpp
+frameDataItems.cpp
+frameDTCReader.cpp
+frameErrorLog.cpp
+frameGrid.cpp
+frameList.cpp
+frameLogFile.cpp
+frameMain.cpp
+frameRealtime.cpp
+frameResourceTree.cpp
+frameRomTables.cpp
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(250) : error C2065: 'frameTableEditor' : undeclared identifier
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(250) : error C2065: 'editorTable' : undeclared identifier
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(250) : error C2106: '=' : left operand must be l-value
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(260) : error C2061: syntax error : identifier 'frameTableEditor'
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(261) : error C2143: syntax error : missing ')' before '{'
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(261) : error C2143: syntax error : missing ';' before '{'
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(266) : error C2227: left of '->LoadFrame' must point to class/struct/union
+C:\TARI Racing Software\products\ecuExplorer\frameRomTables.cpp(268) : error C2227: left of '->ShowWindow' must point to class/struct/union
+frameTableEditor.cpp
+frameTroubleCodes.cpp
+GridCtrl.cpp
+GridDropTarget.cpp
+handlerError.cpp
+InPlaceEdit.cpp
+InPlaceList.cpp
+STabCtrl.cpp
+TitleTip.cpp
+commSerial.cpp
+protocolSSM.cpp
+densocomm.cpp
+densoecu.cpp
+ecutools.cpp
+error.cpp
+log.cpp
+serial.cpp
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\vector(48) : warning C4786: '??0?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@IABV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@ABV?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@@Z' : identifier was truncated to '255' characters in the browser information
+        C:\TARI Racing Software\products\ecuExplorer\serial.cpp(194) : see reference to class template instantiation 'std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > >' being compiled
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\vector(61) : warning C4786: '??0?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@1@0ABV?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@1@@Z' : identifier was truncated to '255' characters in the browser information
+        C:\TARI Racing Software\products\ecuExplorer\serial.cpp(194) : see reference to class template instantiation 'std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > >' being compiled
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\vector(103) : warning C4786: '?rbegin@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AV?$reverse_iterator@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@AAV12@PAV12@H@2@XZ' : identifier was truncated to '255' characters in the browser information
+        C:\TARI Racing Software\products\ecuExplorer\serial.cpp(194) : see reference to class template instantiation 'std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > >' being compiled
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\vector(105) : warning C4786: '?rbegin@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QBE?AV?$reverse_iterator@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@ABV12@PBV12@H@2@XZ' : identifier was truncated to '255' characters in the browser information
+        C:\TARI Racing Software\products\ecuExplorer\serial.cpp(194) : see reference to class template instantiation 'std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > >' being compiled
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\vector(107) : warning C4786: '?rend@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QAE?AV?$reverse_iterator@PAV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@AAV12@PAV12@H@2@XZ' : identifier was truncated to '255' characters in the browser information
+        C:\TARI Racing Software\products\ecuExplorer\serial.cpp(194) : see reference to class template instantiation 'std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > >' being compiled
+C:\Program Files\Microsoft Visual Studio\VC98\INCLUDE\vector(108) : warning C4786: '?rend@?$vector@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V?$allocator@V?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@@2@@std@@QBE?AV?$reverse_iterator@PBV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@V12@ABV12@PBV12@H@2@XZ' : identifier was truncated to '255' characters in the browser information
+        C:\TARI Racing Software\products\ecuExplorer\serial.cpp(194) : see reference to class template instantiation 'std::vector<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> >,class std::allocator<class std::basic_string<char,struct std::char_traits<char>,class std::allocator<char> > > >' being compiled
+Error executing cl.exe.
+Creating temporary file "C:\DOCUME~1\Calvin\LOCALS~1\Temp\RSP8.tmp" with contents
+[
+/nologo /o"Release/ecuExplorer.bsc" 
+".\Release\AW_CMultiViewSplitter.sbr"
+".\Release\dialogCOMM.sbr"
+".\Release\dialogEcuFlash.sbr"
+".\Release\dialogEcuQuery.sbr"
+".\Release\dialogEditor_dataitem.sbr"
+".\Release\dialogEditor_label.sbr"
+".\Release\ecuExplorer.sbr"
+".\Release\frameCommSerial.sbr"
+".\Release\frameDataItems.sbr"
+".\Release\frameDTCReader.sbr"
+".\Release\frameErrorLog.sbr"
+".\Release\frameGrid.sbr"
+".\Release\frameList.sbr"
+".\Release\frameLogFile.sbr"
+".\Release\frameMain.sbr"
+".\Release\frameRealtime.sbr"
+".\Release\frameResourceTree.sbr"
+".\Release\frameRomTables.sbr"
+".\Release\frameTableEditor.sbr"
+".\Release\frameTroubleCodes.sbr"
+".\Release\GridCtrl.sbr"
+".\Release\GridDropTarget.sbr"
+".\Release\handlerError.sbr"
+".\Release\InPlaceEdit.sbr"
+".\Release\InPlaceList.sbr"
+".\Release\STabCtrl.sbr"
+".\Release\TitleTip.sbr"
+".\Release\commSerial.sbr"
+".\Release\protocolSSM.sbr"
+".\Release\densocomm.sbr"
+".\Release\densoecu.sbr"
+".\Release\ecutools.sbr"
+".\Release\error.sbr"
+".\Release\log.sbr"
+".\Release\serial.sbr"]
+Creating command line "bscmake.exe @C:\DOCUME~1\Calvin\LOCALS~1\Temp\RSP8.tmp"
+Creating browse info file...
+<h3>Output Window</h3>
+
+
+
+<h3>Results</h3>
+ecuExplorer.exe - 8 error(s), 6 warning(s)
+</pre>
+</body>
+</html>
